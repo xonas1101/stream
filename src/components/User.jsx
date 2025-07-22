@@ -1,9 +1,9 @@
 function User() {
   return (
     <div>
-      <img src="./user.svg" alt="profile" className="w-16"/>
+      <img src="/user.svg" alt="profile" className="w-16" />
     </div>
-  )
+  );
 }
 
-export default User
+export default User;

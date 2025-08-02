@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import Particles from "../ui/Particles";
 import LoginCard from "../components/LoginCard";
-
+import { GoogleOAuthProvider } from "@react-oauth/google";
 function Landing() {
   const [showComponent, setShowComponent] = useState(false);
 
@@ -68,7 +68,9 @@ function Landing() {
           Click anywhere to continue...
         </p>
       )}
-      <LoginCard fadeOut={fadeOut} />
+      <GoogleOAuthProvider clientId={import.meta.env.VITE_OAUTH_CLIENT_ID}>
+        <LoginCard fadeOut={fadeOut} />
+      </GoogleOAuthProvider>
     </div>
   );
 }

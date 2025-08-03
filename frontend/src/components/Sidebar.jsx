@@ -1,3 +1,5 @@
+import CreateRoomButton from "./CreateRoomButton";
+
 function Sidebar() {
   return (
     <div className="flex flex-col h-screen justify-between">
@@ -28,6 +30,7 @@ function Sidebar() {
           <img src="/liked.svg" className="w-8" />
           <p className="text-2xl hover:underline decoration-dotted">Liked</p>
         </div>
+        <CreateRoomButton />
       </div>
     </div>
   );

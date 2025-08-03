@@ -5,11 +5,14 @@ import { GoogleOAuthProvider } from "@react-oauth/google";
 
 import "./index.css";
 import App from "./App.jsx";
+import { SocketProvider } from "./context/socketContext.jsx";
 
 createRoot(document.getElementById("root")).render(
   <StrictMode>
-    <BrowserRouter>
-      <App />
-    </BrowserRouter>
+    <SocketProvider>
+      <BrowserRouter>
+        <App />
+      </BrowserRouter>
+    </SocketProvider>
   </StrictMode>
 );

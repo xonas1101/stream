@@ -71,7 +71,6 @@ export const googleCallback = async (req, res) => {
 
     oauth2Client.setCredentials(tokens);
 
-    // Use OAuth2 API to get user info
     const oauth2 = google.oauth2({
       auth: oauth2Client,
       version: "v2",
@@ -80,7 +79,6 @@ export const googleCallback = async (req, res) => {
     const userInfo = await oauth2.userinfo.get();
     console.log("👤 User Info:", userInfo.data);
 
-    // Store minimal user info in session
     req.session.user = {
       name: userInfo.data.name,
       email: userInfo.data.email,

@@ -1,29 +1,11 @@
-import dotenv from "dotenv";
-import mongoose from "mongoose";
-import { Server } from "socket.io";
 import http from "http";
-import app from "./app.js";
-import { v4 as uuidv4 } from "uuid";
+import { Server } from "socket.io";
+import app, { sessionMiddleware } from "./app.js";
 import session from "express-session";
+import crypto from "crypto";
 
-dotenv.config({ path: "config.env" });
-
-const PORT = process.env.PORT || 5000;
-const DB_URI = process.env.MONGODB_URI;
-
-// DB connection
-mongoose
-  .connect(DB_URI, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-  })
-  .then(() => console.log("✅ DB Connected"))
-  .catch((err) => console.error("❌ DB Error", err));
-
-// Wrap Express in HTTP server
 const server = http.createServer(app);
 
-// Setup Socket.IO
 const io = new Server(server, {
   cors: {
     origin: "http://localhost:5173",
@@ -32,22 +14,108 @@ const io = new Server(server, {
   },
 });
 
+io.engine.use(sessionMiddleware);
+io.use((socket, next) => {
+  sessionMiddleware(socket.request, {}, next);
+});
+
+// Store leader name for each room
+const roomLeaders = {};
+const rooms = {};
+
 io.on("connection", (socket) => {
-  console.log("🔌 New client connected:", socket.id);
+  const session = socket.request.session;
+
+  if (!session?.user) {
+    console.log("❌ Unauthorized socket connection");
+    return socket.disconnect();
+  }
+
+  console.log("✅ User connected:", session.user.name);
+  console.log("User picture:", session.user.picture);
 
   socket.on("create-room", () => {
-    const roomId = uuidv4();
-    socket.join(roomId);
-    console.log(`📺 Room ${roomId} created by ${socket.id}`);
-    socket.emit("room-created", { roomId });
+    const roomId = crypto.randomUUID();
+    const inviteLink = `http://localhost:5173/room/${roomId}`;
+
+    // Save leader for the room
+    roomLeaders[roomId] = session.user.name;
+
+    socket.emit("room-created", {
+      roomId,
+      inviteLink,
+      leaderName: session.user.name,
+    });
   });
 
-  socket.on("disconnect", () => {
-    console.log("❌ Client disconnected:", socket.id);
+  socket.on("join-room", ({ roomId }) => {
+    socket.join(roomId);
+    console.log(`${session.user.name} joined the room!`);
+
+    // Send leader name to the joining user
+    socket.emit("room-info", {
+      leaderName: roomLeaders[roomId] || null,
+    });
+
+    rooms[roomId] = rooms[roomId] || { messages: [] };
+
+    socket.emit("room-messages", rooms[roomId].messages);
+
+    socket.to(roomId).emit("user-joined", {
+      name: session.user.name,
+      pfp: session.user.picture,
+    });
+  });
+
+  socket.on("send-message", ({ roomId, text }) => {
+    const user = session.user;
+    const msg = {
+      text,
+      name: user.name,
+      pfp: user.picture,
+      senderId: socket.id,
+      time: Date.now(),
+    };
+
+    rooms[roomId] = rooms[roomId] || { messages: [] };
+    rooms[roomId].messages.push(msg);
+
+    io.to(roomId).emit("receive-message", msg);
+  });
+
+  socket.on("select-video", ({ roomId, videoId }) => {
+    console.log("select-video received from", session.user.name, {
+      roomId,
+      videoId,
+    });
+
+    if (roomLeaders[roomId] !== session.user.name) {
+      return socket.emit("error", {
+        message: "Not authorized to select video",
+      });
+    }
+    io.to(roomId).emit("video-selected", {
+      videoId,
+      leader: session.user.name,
+    });
+  });
+
+  socket.on("leader-choosing-video", ({ roomId }) => {
+    socket.to(roomId).emit("leader-choosing-video", {
+      leader: session.user.name,
+    });
+  });
+
+  socket.on("video-control", ({ roomId, action, currentTime }) => {
+    socket.to(roomId).emit("video-control", {
+      action,
+      currentTime,
+      name: session.user.name,
+    });
   });
 });
 
-// Start the server
+const PORT = 5000;
 server.listen(PORT, () => {
-  console.log(`🚀 Server running on http://localhost:${PORT}`);
+  console.log(`🚀 Server listening on http://localhost:${PORT}`);
 });

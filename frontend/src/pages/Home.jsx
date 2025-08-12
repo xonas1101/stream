@@ -1,12 +1,20 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import Loader from "../components/Loader";
+import { useSocket } from "../context/socketContext";
+import { toast } from "react-toastify";
 
 function Home() {
   const [feed, setFeed] = useState([]);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
+  const socket = useSocket();
+  const location = useLocation();
+  const roomId =
+    location?.state?.roomId ??
+    new URLSearchParams(window.location.search).get("roomId");
+
   useEffect(() => {
     axios
       .get("http://localhost:5000/auth/feed", { withCredentials: true })
@@ -21,7 +29,15 @@ function Home() {
   }, []);
 
   const handleVideo = (videoId) => {
-    navigate(`/video/${videoId}`);
+    toast.success("Video selected! Redirecting...");
+    console.log(
+      "emitting select-video",
+      { roomId, videoId },
+      "socket:",
+      !!socket
+    );
+    socket.emit("select-video", { videoId, roomId });
+    navigate(`/video/${videoId}`, { state: { roomId } });
   };
   return (
     <div className="p-8">

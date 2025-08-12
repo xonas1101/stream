@@ -6,6 +6,18 @@ import authRoutes from "./routes/auth.js";
 
 const app = express();
 
+// Session middleware (export to reuse in server.js)
+export const sessionMiddleware = session({
+  secret: "your-session-secret", // replace with env variable
+  resave: false,
+  saveUninitialized: false,
+  cookie: {
+    secure: false, // true if HTTPS
+    httpOnly: true,
+    maxAge: 1000 * 60 * 60 * 24,
+  },
+});
+
 app.use(
   cors({
     origin: "http://localhost:5173",
@@ -13,26 +25,23 @@ app.use(
   })
 );
 
-app.use(
-  session({
-    secret: "y5Hn@GfP!Dkz3Q9r#BvXp6LwM2Tf$Js8ZcEn^Ku1",
-    resave: false,
-    saveUninitialized: false,
-    cookie: {
-      secure: false,
-      httpOnly: true,
-      maxAge: 1000 * 60 * 60 * 24,
-    },
-  })
-);
-
-app.use(morgan("dev"));
+app.use(sessionMiddleware);
 app.use(express.json());
+app.use(morgan("dev"));
 
+// Test route
 app.get("/", (req, res) => {
-  res.send("API is running...");
+  res.send("API running...");
 });
 
+app.get("/api/me", (req, res) => {
+  if (req.session.user) {
+    const { access_token, ...safeUser } = req.session.user;
+    res.status(200).json(safeUser);
+  } else {
+    res.status(401).json({ error: "Not logged in" });
+  }
+});
 app.use("/auth", authRoutes);
 
 export default app;

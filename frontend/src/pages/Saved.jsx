@@ -2,12 +2,12 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import { useLocation, useNavigate } from "react-router-dom";
 import Loader from "../components/Loader";
-import VideoGrid from "../components/VideoGrid";
 import { useSocket } from "../context/socketContext";
 import { toast } from "react-toastify";
+import VideoGrid from "../components/VideoGrid";
 
-function Home() {
-  const [feed, setFeed] = useState([]);
+function Saved() {
+  const [videos, setVideos] = useState([]);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
   const socket = useSocket();
@@ -18,13 +18,13 @@ function Home() {
 
   useEffect(() => {
     axios
-      .get("http://localhost:5000/auth/feed", { withCredentials: true })
+      .get("http://localhost:5000/auth/saved", { withCredentials: true })
       .then((res) => {
-        setFeed(res.data);
+        setVideos(res.data);
         setLoading(false);
       })
       .catch((err) => {
-        console.error("Feed load error", err);
+        console.error("Saved videos load error", err);
         setLoading(false);
       });
   }, []);
@@ -37,22 +37,16 @@ function Home() {
 
   return (
     <div className="p-8">
+      <h2 className="text-2xl font-semibold mb-6">Saved Videos</h2>
       {loading ? (
         <div className="h-64">
           <Loader />
         </div>
       ) : (
-        feed.map((channel, idx) => (
-          <VideoGrid
-            key={idx}
-            title={channel.channelTitle}
-            videos={channel.videos}
-            handleVideo={handleVideo}
-          />
-        ))
+        <VideoGrid title={""} videos={videos} handleVideo={handleVideo} />
       )}
     </div>
   );
 }
 
-export default Home;
+export default Saved;

@@ -65,7 +65,6 @@ export const googleCallback = async (req, res) => {
   );
 
   try {
-    // Exchange authorization code for tokens
     const { tokens } = await oauth2Client.getToken(code);
     console.log("✅ Tokens received:", tokens);
 
@@ -220,5 +219,123 @@ export const getVideoStats = async (req, res) => {
   } catch (err) {
     console.error("Error fetching video stats:", err);
     res.status(500).json({ error: "Failed to fetch video stats" });
+  }
+};
+
+export const googleLikedVideos = async (req, res) => {
+  if (!req.session.user || !req.session.user.access_token) {
+    return res.status(401).send("Not authenticated");
+  }
+
+  const oauthClient = new google.auth.OAuth2();
+  oauthClient.setCredentials({ access_token: req.session.user.access_token });
+  const youtube = google.youtube({ version: "v3", auth: oauthClient });
+
+  try {
+    const liked = await youtube.videos.list({
+      part: "snippet,contentDetails,statistics",
+      myRating: "like",
+      maxResults: 20,
+    });
+
+    const videos = liked.data.items.map((video) => ({
+      videoId: video.id,
+      title: video.snippet.title,
+      thumbnail: video.snippet.thumbnails?.medium?.url,
+      publishedAt: video.snippet.publishedAt,
+      channelTitle: video.snippet.channelTitle,
+    }));
+
+    res.json(videos);
+  } catch (err) {
+    console.error("Liked videos error:", err);
+    res.status(500).send("Error fetching liked videos");
+  }
+};
+
+export const googleSavedVideos = async (req, res) => {
+  if (!req.session.user || !req.session.user.access_token) {
+    return res.status(401).send("Not authenticated");
+  }
+
+  const oauthClient = new google.auth.OAuth2();
+  oauthClient.setCredentials({ access_token: req.session.user.access_token });
+  const youtube = google.youtube({ version: "v3", auth: oauthClient });
+
+  try {
+    const channels = await youtube.channels.list({
+      part: "contentDetails",
+      mine: true,
+    });
+
+    if (!channels.data.items || channels.data.items.length === 0) {
+      console.error("No channel found for user");
+      return res.status(404).send("No channel found for user");
+    }
+
+    const watchLaterId =
+      channels.data.items[0].contentDetails.relatedPlaylists.watchLater;
+
+    if (!watchLaterId) {
+      console.error("Watch Later playlist not available");
+      return res.status(404).send("Watch Later playlist not available");
+    }
+
+    const saved = await youtube.playlistItems.list({
+      part: "snippet,contentDetails",
+      playlistId: watchLaterId,
+      maxResults: 20,
+    });
+
+    if (!saved.data.items || saved.data.items.length === 0) {
+      console.log("Watch Later playlist is empty");
+      return res.json([]);
+    }
+
+    const videos = saved.data.items.map((item) => ({
+      videoId: item.contentDetails.videoId,
+      title: item.snippet.title,
+      thumbnail: item.snippet.thumbnails?.medium?.url,
+      publishedAt: item.snippet.publishedAt,
+      channelTitle: item.snippet.channelTitle,
+    }));
+
+    res.json(videos);
+  } catch (err) {
+    console.error(
+      "Saved (Watch Later) error:",
+      err.response?.data || err.message
+    );
+    res.status(500).send("Error fetching saved videos");
+  }
+};
+
+export const googleTrendingVideos = async (req, res) => {
+  try {
+    const youtube = google.youtube({
+      version: "v3",
+      auth: process.env.GOOGLE_API_KEY,
+    });
+
+    const trending = await youtube.videos.list({
+      part: "snippet,statistics",
+      chart: "mostPopular",
+      regionCode: "IN",
+      maxResults: 20,
+    });
+
+    const videos = trending.data.items.map((video) => ({
+      videoId: video.id,
+      title: video.snippet.title,
+      thumbnail: video.snippet.thumbnails?.medium?.url,
+      publishedAt: video.snippet.publishedAt,
+      channelTitle: video.snippet.channelTitle,
+      views: video.statistics.viewCount,
+    }));
+
+    res.json(videos);
+  } catch (err) {
+    console.error("Trending videos error:", err);
+    res.status(500).send("Error fetching trending videos");
   }
 };

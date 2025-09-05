@@ -5,6 +5,11 @@ export default {
     extend: {
       fontFamily: {
         bitcount: ['"BitCount Prop Double"', "sans-serif"],
+        roboto: ['"Roboto"', "sans-serif"],
+      },
+      backgroundImage: {
+        "dotted-progress":
+          "repeating-linear-gradient(90deg, white, white 4px, transparent 4px, transparent 8px)",
       },
       keyframes: {
         slideFromTop: {

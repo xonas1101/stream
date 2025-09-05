@@ -21,6 +21,7 @@ function CreateRoomButton() {
 
         socket.emit("create-room");
         socket.once("room-created", ({ roomId, inviteLink, leaderName }) => {
+          localStorage.setItem("roomId", roomId);
           navigate(`/room/${roomId}`, { state: { leaderName } });
           console.log(` Invite link: ${inviteLink}`);
         });

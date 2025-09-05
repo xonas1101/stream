@@ -30,6 +30,7 @@ function Liked() {
   }, []);
 
   const handleVideo = (videoId) => {
+    const roomId = localStorage.getItem("roomId");
     toast.success("Video selected! Redirecting...");
     socket.emit("select-video", { videoId, roomId });
     navigate(`/video/${videoId}`, { state: { roomId } });

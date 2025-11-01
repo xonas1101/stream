@@ -11,7 +11,7 @@ function RoomPage() {
   const socket = useSocket();
   const [leaderName, setLeaderName] = useState(state?.leaderName ?? null);
   const name = leaderName ? leaderName.split(" ")[0] : "Unknown";
-
+  const [copied, setCopied] = useState(false);
   const [messages, setMessages] = useState([]);
   const messageEndRef = useRef(null);
 
@@ -72,6 +72,23 @@ function RoomPage() {
     navigate("/home", { state: { roomId } });
   };
 
+  const copyLink = async () => {
+    const link = localStorage.getItem("Invite_link");
+    if (!link) {
+      toast.error("No invite link found");
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(link);
+      setCopied(true);
+      toast.success("Link copied!");
+      setTimeout(() => setCopied(false), 1000);
+    } catch (e) {
+      toast.error("Failed to copy");
+      console.error(e);
+    }
+  };
+
   return (
     <div className="flex flex-col gap-4 h-screen">
       <div className="bg-black flex justify-between items-center w-[100%] h-[15%] px-8">
@@ -80,9 +97,13 @@ function RoomPage() {
           {name ? `${name}'s Room` : `Unknown's Room`}
         </span>
         <div className="flex gap-4">
-          <div>Video chat option</div>
-          <div>Voice chat option</div>
-          <div onClick={handleVideo}>Select a video!</div>
+          <div className="hover:cursor-pointer" onClick={copyLink}>
+            {" "}
+            {copied ? "Copied" : "Copy room link!"}
+          </div>
+          <div onClick={handleVideo} className="hover:cursor-pointer">
+            Select a video!
+          </div>
         </div>
       </div>
 

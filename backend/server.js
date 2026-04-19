@@ -170,7 +170,6 @@ io.on("connection", (socket) => {
       pfp: session.user.picture,
     });
   });
-  });
 });
 
 const PORT = 5001;

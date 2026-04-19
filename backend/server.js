@@ -63,6 +63,7 @@ io.on("connection", (socket) => {
     // Send leader name to the joining user
     socket.emit("room-info", {
       leaderName: roomLeaders[roomId] || null,
+      isVCOngoing: rooms[roomId].isVCOngoing || false
     });
 
     socket.emit("room-messages", rooms[roomId].messages);
@@ -148,6 +149,34 @@ io.on("connection", (socket) => {
   });
 
   // WebRTC Signaling
+  socket.on("join-vc", ({ roomId }) => {
+    rooms[roomId] = rooms[roomId] || { messages: [], videoId: null, videoState: { action: "pause", currentTime: 0 }, isVCOngoing: false };
+    rooms[roomId].vcParticipants = rooms[roomId].vcParticipants || new Set();
+    rooms[roomId].vcParticipants.add(socket.id);
+    rooms[roomId].isVCOngoing = true;
+    
+    // Broadcast ringing to users not yet in VC
+    socket.to(roomId).emit("vc-ringing", { name: session.user.name });
+    
+    // Broadcast join to users already in VC so they can send offers
+    socket.to(roomId).emit("vc-user-joined", { 
+      socketId: socket.id, 
+      name: session.user.name, 
+      pfp: session.user.picture 
+    });
+  });
+
+  socket.on("leave-vc", ({ roomId }) => {
+    if (rooms[roomId] && rooms[roomId].vcParticipants) {
+      rooms[roomId].vcParticipants.delete(socket.id);
+      if (rooms[roomId].vcParticipants.size === 0) {
+        rooms[roomId].isVCOngoing = false;
+        io.to(roomId).emit("vc-ended");
+      }
+    }
+    socket.to(roomId).emit("vc-user-left", { socketId: socket.id });
+  });
+
   socket.on("webrtc-offer", ({ roomId, targetUserId, offer, senderId }) => {
     socket.to(targetUserId).emit("webrtc-offer", { offer, senderId, name: session.user.name, pfp: session.user.picture });
   });
@@ -169,6 +198,22 @@ io.on("connection", (socket) => {
       name: session.user.name,
       pfp: session.user.picture,
     });
+  });
+
+  socket.on("disconnect", () => {
+    console.log("❌ User disconnected:", session.user.name);
+    
+    // Clean up VC participants and emit vc-user-left
+    for (const [roomId, roomData] of Object.entries(rooms)) {
+      if (roomData.vcParticipants && roomData.vcParticipants.has(socket.id)) {
+        roomData.vcParticipants.delete(socket.id);
+        socket.to(roomId).emit("vc-user-left", { socketId: socket.id });
+        if (roomData.vcParticipants.size === 0) {
+          roomData.isVCOngoing = false;
+          io.to(roomId).emit("vc-ended");
+        }
+      }
+    }
   });
 });
 

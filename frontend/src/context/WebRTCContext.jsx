@@ -1,5 +1,5 @@
-import { useEffect, useRef, useState, useCallback } from "react";
-import { useSocket } from "../context/socketContext";
+import React, { createContext, useContext, useState, useRef, useCallback, useEffect } from "react";
+import { useSocket } from "./socketContext";
 
 const ICE_SERVERS = {
   iceServers: [
@@ -8,12 +8,18 @@ const ICE_SERVERS = {
   ],
 };
 
-export const useWebRTC = (roomId) => {
+const WebRTCContext = createContext();
+
+export const WebRTCProvider = ({ children }) => {
   const socket = useSocket();
+  const [roomId, setRoomId] = useState(null);
+  const [isVCEnabled, setIsVCEnabled] = useState(false);
+  const [isVCOngoing, setIsVCOngoing] = useState(false);
   const [localStream, setLocalStream] = useState(null);
   const [remoteStreams, setRemoteStreams] = useState({});
   const [isAudioMuted, setIsAudioMuted] = useState(false);
   const [isVideoMuted, setIsVideoMuted] = useState(false);
+  
   const peersRef = useRef({});
   const localStreamRef = useRef(null);
 
@@ -50,8 +56,16 @@ export const useWebRTC = (roomId) => {
     }
   }, []);
 
+  const stopMedia = useCallback(() => {
+    if (localStreamRef.current) {
+      localStreamRef.current.getTracks().forEach((track) => track.stop());
+      localStreamRef.current = null;
+      setLocalStream(null);
+    }
+  }, []);
+
   const createPeer = useCallback(
-    (targetUserId, name, pfp) => {
+    (targetUserId, name, pfp, currentRoomId) => {
       const peer = new RTCPeerConnection(ICE_SERVERS);
       peersRef.current[targetUserId] = peer;
 
@@ -75,7 +89,7 @@ export const useWebRTC = (roomId) => {
       peer.onicecandidate = (event) => {
         if (event.candidate) {
           socket.emit("webrtc-ice-candidate", {
-            roomId,
+            roomId: currentRoomId,
             targetUserId: targetUserId,
             senderId: socket.id,
             candidate: event.candidate,
@@ -100,18 +114,60 @@ export const useWebRTC = (roomId) => {
 
       return peer;
     },
-    [roomId, socket]
+    [socket]
   );
 
+  // Listen to room-info and vc-ringing for global UI states
   useEffect(() => {
-    if (!socket || !roomId) return;
+    if (!socket) return;
 
-    startMedia();
+    const handleRoomInfo = ({ isVCOngoing }) => {
+      if (isVCOngoing) setIsVCOngoing(true);
+    };
 
-    const handleUserJoined = async ({ socketId, name, pfp }) => {
+    const handleVcRinging = ({ name }) => {
+      setIsVCOngoing(true);
+      // We don't want to show toast if we are already in the call
+      if (!isVCEnabled) {
+        import("react-toastify").then(({ toast }) => {
+          toast.info(`📞 ${name} is starting a video call!`);
+        });
+      }
+    };
+
+    const handleVcEnded = () => {
+      setIsVCOngoing(false);
+    };
+
+    socket.on("room-info", handleRoomInfo);
+    socket.on("vc-ringing", handleVcRinging);
+    socket.on("vc-ended", handleVcEnded);
+
+    return () => {
+      socket.off("room-info", handleRoomInfo);
+      socket.off("vc-ringing", handleVcRinging);
+      socket.off("vc-ended", handleVcEnded);
+    };
+  }, [socket, isVCEnabled]);
+
+  useEffect(() => {
+    if (!socket || !roomId || !isVCEnabled) {
+      // Cleanup if VC is disabled
+      Object.values(peersRef.current).forEach((peer) => peer.close());
+      peersRef.current = {};
+      setRemoteStreams({});
+      stopMedia();
+      return;
+    }
+
+    startMedia().then(() => {
+      socket.emit("join-vc", { roomId });
+    });
+
+    const handleVcUserJoined = async ({ socketId, name, pfp }) => {
       if (!localStreamRef.current || !socketId) return;
 
-      const peer = createPeer(socketId, name, pfp);
+      const peer = createPeer(socketId, name, pfp, roomId);
       try {
         const offer = await peer.createOffer();
         await peer.setLocalDescription(offer);
@@ -127,7 +183,7 @@ export const useWebRTC = (roomId) => {
     };
 
     const handleOffer = async ({ offer, senderId, name, pfp }) => {
-      const peer = createPeer(senderId, name, pfp);
+      const peer = createPeer(senderId, name, pfp, roomId);
       try {
         await peer.setRemoteDescription(new RTCSessionDescription(offer));
         const answer = await peer.createAnswer();
@@ -165,24 +221,64 @@ export const useWebRTC = (roomId) => {
       }
     };
 
-    socket.on("user-joined", handleUserJoined);
+    const handleVcUserLeft = ({ socketId }) => {
+      const peer = peersRef.current[socketId];
+      if (peer) {
+        peer.close();
+        delete peersRef.current[socketId];
+      }
+      setRemoteStreams((prev) => {
+        const newStreams = { ...prev };
+        delete newStreams[socketId];
+        return newStreams;
+      });
+    };
+
+    socket.on("vc-user-joined", handleVcUserJoined);
+    socket.on("vc-user-left", handleVcUserLeft);
     socket.on("webrtc-offer", handleOffer);
     socket.on("webrtc-answer", handleAnswer);
     socket.on("webrtc-ice-candidate", handleIceCandidate);
 
     return () => {
-      socket.off("user-joined", handleUserJoined);
+      socket.off("vc-user-joined", handleVcUserJoined);
+      socket.off("vc-user-left", handleVcUserLeft);
       socket.off("webrtc-offer", handleOffer);
       socket.off("webrtc-answer", handleAnswer);
       socket.off("webrtc-ice-candidate", handleIceCandidate);
-
-      Object.values(peersRef.current).forEach((peer) => peer.close());
-      peersRef.current = {};
-      if (localStreamRef.current) {
-        localStreamRef.current.getTracks().forEach((track) => track.stop());
-      }
     };
-  }, [socket, roomId, createPeer, startMedia]);
+  }, [socket, roomId, isVCEnabled, createPeer, startMedia, stopMedia]);
 
-  return { localStream, remoteStreams, toggleAudio, toggleVideo, isAudioMuted, isVideoMuted };
+  const startVC = (id) => {
+    setRoomId(id);
+    setIsVCEnabled(true);
+  };
+
+  const stopVC = () => {
+    if (socket && roomId) {
+      socket.emit("leave-vc", { roomId });
+    }
+    setIsVCEnabled(false);
+  };
+
+  return (
+    <WebRTCContext.Provider
+      value={{
+        localStream,
+        remoteStreams,
+        toggleAudio,
+        toggleVideo,
+        isAudioMuted,
+        isVideoMuted,
+        isVCEnabled,
+        isVCOngoing,
+        startVC,
+        stopVC,
+      }}
+    >
+      {children}
+    </WebRTCContext.Provider>
+  );
 };
+
+export const useWebRTC = () => useContext(WebRTCContext);

@@ -5,7 +5,7 @@ import ChatInput from "../components/ChatInput";
 import ReactionBar from "../components/ReactionBar";
 import ReactionBubbles from "../components/ReactionBubbles";
 import { toast } from "react-toastify";
-import { useWebRTC } from "../hooks/useWebRTC";
+import { useWebRTC } from "../context/WebRTCContext";
 import { CamGrid } from "../components/CamGrid";
 
 function RoomPage() {
@@ -20,7 +20,11 @@ function RoomPage() {
     toggleVideo,
     isAudioMuted,
     isVideoMuted,
-  } = useWebRTC(roomId);
+    isVCEnabled,
+    isVCOngoing,
+    startVC,
+    stopVC
+  } = useWebRTC();
   const [leaderName, setLeaderName] = useState(state?.leaderName ?? null);
   const name = leaderName ? leaderName.split(" ")[0] : "Unknown";
   const [copied, setCopied] = useState(false);
@@ -120,34 +124,69 @@ function RoomPage() {
 
   return (
     <div className="flex flex-col gap-4 h-screen">
-      <div className="bg-black flex justify-between items-center w-[100%] h-[15%] px-8">
-        <div>Leave room</div>
-        <span className="text-5xl">
+      <div className="bg-black flex justify-between items-center w-full p-6 border-b-4 border-white mb-4">
+        <div className="flex gap-4">
+          <button 
+            onClick={() => navigate("/home", { state: { roomId } })} 
+            className="px-4 py-2 border-2 border-white uppercase tracking-widest hover:bg-white hover:text-black transition-all active:translate-y-1 shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] hover:shadow-[0px_0px_0px_0px_rgba(255,255,255,1)] text-sm md:text-base"
+          >
+            Home
+          </button>
+          <button 
+            onClick={() => navigate("/home")} 
+            className="px-4 py-2 border-2 border-white uppercase tracking-widest hover:bg-red-600 hover:text-white transition-all active:translate-y-1 shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] hover:shadow-[0px_0px_0px_0px_rgba(255,255,255,1)] text-sm md:text-base"
+          >
+            Leave room
+          </button>
+        </div>
+
+        <span className="text-3xl md:text-5xl uppercase tracking-widest text-center px-4 truncate">
           {name ? `${name}'s Room` : `Unknown's Room`}
         </span>
+
         <div className="flex gap-4">
-          <div className="hover:cursor-pointer" onClick={copyLink}>
-            {" "}
-            {copied ? "Copied" : "Copy room link!"}
-          </div>
-          <div onClick={handleVideo} className="hover:cursor-pointer">
-            Select a video!
-          </div>
+          <button 
+            onClick={copyLink} 
+            className="px-4 py-2 border-2 border-white uppercase tracking-widest hover:bg-white hover:text-black transition-all active:translate-y-1 shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] hover:shadow-[0px_0px_0px_0px_rgba(255,255,255,1)] text-sm md:text-base whitespace-nowrap"
+          >
+            {copied ? "Copied" : "Copy Link"}
+          </button>
+          {!isVCEnabled && (
+            <button 
+              onClick={() => startVC(roomId)} 
+              className={`px-4 py-2 border-2 border-white uppercase tracking-widest transition-all active:translate-y-1 shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] hover:shadow-[0px_0px_0px_0px_rgba(255,255,255,1)] text-sm md:text-base whitespace-nowrap ${
+                isVCOngoing 
+                  ? "bg-green-600 text-white hover:bg-green-500 animate-[pulse_2s_ease-in-out_infinite]" 
+                  : "hover:bg-white hover:text-black"
+              }`}
+            >
+              {isVCOngoing ? "📞 Join Video Chat" : "Start Video Chat"}
+            </button>
+          )}
+          <button 
+            onClick={handleVideo} 
+            className="px-4 py-2 border-2 border-white bg-white text-black uppercase tracking-widest hover:bg-black hover:text-white transition-all active:translate-y-1 shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] hover:shadow-[0px_0px_0px_0px_rgba(255,255,255,1)] text-sm md:text-base whitespace-nowrap"
+          >
+            Select Video
+          </button>
         </div>
       </div>
 
       <div className="flex flex-1 overflow-hidden">
-        {/* Videos Container */}
-        <div className="flex flex-col w-2/3 p-4 border-r border-gray-800">
-          <CamGrid 
-            localStream={localStream} 
-            remoteStreams={remoteStreams} 
-            toggleAudio={toggleAudio}
-            toggleVideo={toggleVideo}
-            isAudioMuted={isAudioMuted}
-            isVideoMuted={isVideoMuted}
-          />
-        </div>
+        {/* Videos Container - Only show if VC is enabled */}
+        {isVCEnabled && (
+          <div className="flex flex-col w-2/3 p-4 border-r border-gray-800">
+            <CamGrid 
+              localStream={localStream} 
+              remoteStreams={remoteStreams} 
+              toggleAudio={toggleAudio}
+              toggleVideo={toggleVideo}
+              isAudioMuted={isAudioMuted}
+              isVideoMuted={isVideoMuted}
+              stopVC={stopVC}
+            />
+          </div>
+        )}
 
         {/* Messages Layout */}
         <div className="flex flex-col flex-1 relative">

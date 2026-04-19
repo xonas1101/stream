@@ -14,59 +14,62 @@ import "react-toastify/dist/ReactToastify.css";
 import Trending from "./pages/Trending.jsx";
 import UserPage from "./pages/UserPage.jsx";
 import ProtectedRoute from "./components/ProtectedRoutes.jsx";
+import { WebRTCProvider } from "./context/WebRTCContext.jsx";
 // import AuthCallback from "./pages/AuthCallback.jsx";
 
 function App() {
   return (
     <div className="min-h-screen min-w-screen text-white font-bitcount">
-      <MarioFollower />
-      <Routes>
-        <Route path="/" element={<Landing />} />
+      <WebRTCProvider>
+        <MarioFollower />
+        <Routes>
+          <Route path="/" element={<Landing />} />
 
-        <Route
-          element={
-            <ProtectedRoute>
-              <Layout />
-            </ProtectedRoute>
-          }
-        >
-          <Route path="/home" element={<Home />} />
-          <Route path="/liked" element={<Liked />} />
+          <Route
+            element={
+              <ProtectedRoute>
+                <Layout />
+              </ProtectedRoute>
+            }
+          >
+            <Route path="/home" element={<Home />} />
+            <Route path="/liked" element={<Liked />} />
 
-          <Route path="/trending" element={<Trending />} />
-          <Route path="/search" element={<SearchResultsPage />} />
-        </Route>
+            <Route path="/trending" element={<Trending />} />
+            <Route path="/search" element={<SearchResultsPage />} />
+          </Route>
 
-        <Route
-          path="/room/:roomId"
-          element={
-            <ProtectedRoute>
-              <RoomPage />
-            </ProtectedRoute>
-          }
-        />
+          <Route
+            path="/room/:roomId"
+            element={
+              <ProtectedRoute>
+                <RoomPage />
+              </ProtectedRoute>
+            }
+          />
 
-        <Route
-          path="/video/:id"
-          element={
-            <ProtectedRoute>
-              <Video />
-            </ProtectedRoute>
-          }
-        />
+          <Route
+            path="/video/:id"
+            element={
+              <ProtectedRoute>
+                <Video />
+              </ProtectedRoute>
+            }
+          />
 
-        <Route
-          path="/userpage"
-          element={
-            <ProtectedRoute>
-              <UserPage />
-            </ProtectedRoute>
-          }
-        />
+          <Route
+            path="/userpage"
+            element={
+              <ProtectedRoute>
+                <UserPage />
+              </ProtectedRoute>
+            }
+          />
 
-        <Route path="*" element={<NotFound />} />
-      </Routes>
-      <ToastContainer position="top-right" autoClose={3000} />
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+        <ToastContainer position="top-right" autoClose={3000} />
+      </WebRTCProvider>
     </div>
   );
 }

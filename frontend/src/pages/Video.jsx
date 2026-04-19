@@ -8,12 +8,24 @@ import YouTube from "react-youtube";
 import ChatInput from "../components/ChatInput";
 import ReactionBar from "../components/ReactionBar";
 import ReactionBubbles from "../components/ReactionBubbles";
+import { useWebRTC } from "../context/WebRTCContext";
+import { CamGrid } from "../components/CamGrid";
 
 function Video() {
   const { id: videoId } = useParams();
   const { state, search } = useLocation();
   const socket = useSocket();
   const [video, setVideo] = useState(null);
+  const {
+    localStream,
+    remoteStreams,
+    toggleAudio,
+    toggleVideo,
+    isAudioMuted,
+    isVideoMuted,
+    isVCEnabled,
+    stopVC,
+  } = useWebRTC();
 
   const roomId = state?.roomId ?? new URLSearchParams(search).get("roomId");
 
@@ -139,7 +151,9 @@ function Video() {
         }
 
         if (needsSeek) {
-          await playerRef.current.seekTo(currentTime, true);
+          // Add a slight 250ms offset for latency when playing to sync up perfectly
+          const targetTime = action === "play" ? currentTime + 0.25 : currentTime;
+          await playerRef.current.seekTo(targetTime, true);
         }
 
         if (action === "play") await playerRef.current.playVideo();
@@ -183,7 +197,8 @@ function Video() {
         // When they do, it will emit 'play' and bring everyone into sync.
 
         if (typeof currentTime === "number" && !isNaN(currentTime)) {
-          await playerRef.current.seekTo(currentTime, true);
+          const targetTime = action === "play" ? currentTime + 0.25 : currentTime;
+          await playerRef.current.seekTo(targetTime, true);
         }
         if (action === "play") await playerRef.current.playVideo();
         else if (action === "pause") await playerRef.current.pauseVideo();
@@ -304,6 +319,22 @@ function Video() {
           className="flex flex-col flex-shrink-0 border-l-4 border-white h-full"
           style={{ width: sidebarWidth }}
         >
+
+          {/* Video Chat Container (Sidebar Version) */}
+          {isVCEnabled && (
+            <div className="w-full border-b-4 border-white flex-shrink-0 p-3 overflow-y-auto max-h-[40%] bg-stone-900">
+              <CamGrid 
+                localStream={localStream} 
+                remoteStreams={remoteStreams} 
+                toggleAudio={toggleAudio}
+                toggleVideo={toggleVideo}
+                isAudioMuted={isAudioMuted}
+                isVideoMuted={isVideoMuted}
+                stopVC={stopVC}
+                isSidebar={true}
+              />
+            </div>
+          )}
 
           {/* Messages */}
           <div className="flex-1 overflow-y-auto p-4 relative">

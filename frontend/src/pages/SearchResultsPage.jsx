@@ -1,8 +1,9 @@
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams, useLocation, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { searchYouTube } from "../utils/YouTubeSearch";
-import { useNavigate } from "react-router-dom";
 import Loader from "../components/Loader";
+import { useSocket } from "../context/socketContext";
+import { toast } from "react-toastify";
 
 function SearchResultsPage() {
   const [searchParams] = useSearchParams();
@@ -10,6 +11,11 @@ function SearchResultsPage() {
   const [loading, setLoading] = useState(true);
   const [videos, setVideos] = useState([]);
   const navigate = useNavigate();
+  const location = useLocation();
+  const socket = useSocket();
+  const roomId =
+    location?.state?.roomId ??
+    new URLSearchParams(window.location.search).get("roomId");
 
   useEffect(() => {
     if (query) {
@@ -27,7 +33,6 @@ function SearchResultsPage() {
   }, [query]);
 
   const handleVideo = (videoId) => {
-    const roomId = localStorage.getItem("roomId");
     toast.success("Video selected! Redirecting...");
     socket.emit("select-video", { videoId, roomId });
     navigate(`/video/${videoId}`, { state: { roomId } });

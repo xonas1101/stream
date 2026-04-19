@@ -48,9 +48,15 @@ io.on("connection", (socket) => {
     });
   });
 
-  socket.on("join-room", ({ roomId }) => {
+  socket.on("join-room", (data) => {
+    console.log("👉 join-room event received with data:", data);
+    if (!data || !data.roomId) {
+      console.log("❌ join-room called without roomId");
+      return;
+    }
+    const { roomId } = data;
     socket.join(roomId);
-    console.log(`${session.user.name} joined the room!`);
+    console.log(`${session.user.name} joined the room!: ${roomId}`);
 
     rooms[roomId] = rooms[roomId] || { messages: [], videoId: null, videoState: { action: "pause", currentTime: 0 } };
 
@@ -79,10 +85,13 @@ io.on("connection", (socket) => {
     socket.to(roomId).emit("user-joined", {
       name: session.user.name,
       pfp: session.user.picture,
+      socketId: socket.id,
     });
   });
 
-  socket.on("send-message", ({ roomId, text }) => {
+  socket.on("send-message", (data) => {
+    console.log("👉 send-message event received with data:", data);
+    const { roomId, text } = data;
     const user = session.user;
     const msg = {
       text,
@@ -95,6 +104,7 @@ io.on("connection", (socket) => {
     rooms[roomId] = rooms[roomId] || { messages: [] };
     rooms[roomId].messages.push(msg);
 
+    console.log(`Broadcasting receive-message to room: ${roomId}`);
     io.to(roomId).emit("receive-message", msg);
   });
 
@@ -137,6 +147,20 @@ io.on("connection", (socket) => {
     });
   });
 
+  // WebRTC Signaling
+  socket.on("webrtc-offer", ({ roomId, targetUserId, offer, senderId }) => {
+    socket.to(targetUserId).emit("webrtc-offer", { offer, senderId, name: session.user.name, pfp: session.user.picture });
+  });
+
+  socket.on("webrtc-answer", ({ roomId, targetUserId, answer, senderId }) => {
+    socket.to(targetUserId).emit("webrtc-answer", { answer, senderId });
+  });
+
+  socket.on("webrtc-ice-candidate", ({ roomId, targetUserId, candidate, senderId }) => {
+    socket.to(targetUserId).emit("webrtc-ice-candidate", { candidate, senderId });
+  });
+
+  // Reaction logic from master
   socket.on("send-reaction", ({ roomId, emoji }) => {
     // Broadcast to everyone in the room (including sender)
     io.to(roomId).emit("receive-reaction", {
@@ -148,7 +172,7 @@ io.on("connection", (socket) => {
   });
 });
 
-const PORT = 5000;
+const PORT = 5001;
 server.listen(PORT, () => {
   console.log(`🚀 Server listening on port: ${PORT}`);
 });

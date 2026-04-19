@@ -2,12 +2,15 @@ import express from "express";
 import cors from "cors";
 import morgan from "morgan";
 import session from "express-session";
+import sessionFileStore from "session-file-store";
 import authRoutes from "./routes/auth.js";
 
 const app = express();
+const FileStore = sessionFileStore(session);
 
 // Session middleware (export to reuse in server.js)
 export const sessionMiddleware = session({
+  store: new FileStore({ path: "./sessions", retries: 0 }),
   secret: "your-session-secret", // replace with env variable
   resave: false,
   saveUninitialized: false,

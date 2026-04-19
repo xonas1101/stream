@@ -18,7 +18,7 @@ function Home() {
 
   useEffect(() => {
     axios
-      .get("http://localhost:5000/auth/feed", { withCredentials: true })
+      .get("http://localhost:5001/auth/feed", { withCredentials: true })
       .then((res) => {
         setFeed(res.data);
         setLoading(false);

@@ -8,7 +8,7 @@ function CreateRoomButton() {
   const handleClick = () => {
     if (!socket) return;
 
-    fetch("http://localhost:5000/api/me", {
+    fetch("http://localhost:5001/api/me", {
       credentials: "include",
     })
       .then((res) => {

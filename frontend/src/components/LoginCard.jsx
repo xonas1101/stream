@@ -1,13 +1,15 @@
 // import { useGoogleLogin } from "@react-oauth/google";
 // import { googleAuth } from "../api";
 
-import { useNavigate } from "react-router-dom";
+// import { useNavigate } from "react-router-dom";
 
 function LoginCard({ fadeOut }) {
   // const navigate = useNavigate();
 
   const handleLogin = () => {
-    window.location.href = "http://localhost:5000/auth/google";
+    const returnTo = sessionStorage.getItem("returnTo");
+    const query = returnTo ? `?returnTo=${encodeURIComponent(returnTo)}` : "";
+    window.location.href = `http://localhost:5001/auth/google${query}`;
   };
 
   return (

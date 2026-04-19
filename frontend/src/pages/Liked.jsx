@@ -18,7 +18,7 @@ function Liked() {
 
   useEffect(() => {
     axios
-      .get("http://localhost:5000/auth/liked", { withCredentials: true })
+      .get("http://localhost:5001/auth/liked", { withCredentials: true })
       .then((res) => {
         setVideos(res.data);
         setLoading(false);

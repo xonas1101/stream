@@ -74,6 +74,14 @@ function RoomPage() {
     navigate("/home", { state: { roomId } });
   };
 
+  const handleHome = () => {
+    navigate("/home", { state: { roomId } });
+  };
+
+  const handleLeaveRoom = () => {
+    navigate("/home");
+  };
+
   const copyLink = async () => {
     const link = localStorage.getItem("Invite_link");
     if (!link) {
@@ -93,19 +101,39 @@ function RoomPage() {
 
   return (
     <div className="flex flex-col gap-4 h-screen">
-      <div className="bg-black flex justify-between items-center w-[100%] h-[15%] px-8">
-        <div>Leave room</div>
-        <span className="text-5xl">
+      <div className="bg-black flex justify-between items-center w-full p-6 border-b-4 border-white mb-4">
+        <div className="flex gap-4">
+          <button 
+            onClick={handleHome} 
+            className="px-4 py-2 border-2 border-white uppercase tracking-widest hover:bg-white hover:text-black transition-all active:translate-y-1 shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] hover:shadow-[0px_0px_0px_0px_rgba(255,255,255,1)] text-sm md:text-base"
+          >
+            Home
+          </button>
+          <button 
+            onClick={handleLeaveRoom} 
+            className="px-4 py-2 border-2 border-white uppercase tracking-widest hover:bg-red-600 hover:text-white transition-all active:translate-y-1 shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] hover:shadow-[0px_0px_0px_0px_rgba(255,255,255,1)] text-sm md:text-base"
+          >
+            Leave room
+          </button>
+        </div>
+
+        <span className="text-3xl md:text-5xl uppercase tracking-widest text-center px-4 truncate">
           {name ? `${name}'s Room` : `Unknown's Room`}
         </span>
+
         <div className="flex gap-4">
-          <div className="hover:cursor-pointer" onClick={copyLink}>
-            {" "}
-            {copied ? "Copied" : "Copy room link!"}
-          </div>
-          <div onClick={handleVideo} className="hover:cursor-pointer">
-            Select a video!
-          </div>
+          <button 
+            onClick={copyLink} 
+            className="px-4 py-2 border-2 border-white uppercase tracking-widest hover:bg-white hover:text-black transition-all active:translate-y-1 shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] hover:shadow-[0px_0px_0px_0px_rgba(255,255,255,1)] text-sm md:text-base"
+          >
+            {copied ? "Copied" : "Copy Link"}
+          </button>
+          <button 
+            onClick={handleVideo} 
+            className="px-4 py-2 border-2 border-white bg-white text-black uppercase tracking-widest hover:bg-black hover:text-white transition-all active:translate-y-1 shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] hover:shadow-[0px_0px_0px_0px_rgba(255,255,255,1)] text-sm md:text-base"
+          >
+            Select Video
+          </button>
         </div>
       </div>
 

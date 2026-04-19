@@ -126,3 +126,34 @@
     translate: calc(var(--bubble-drift, 0px) * 0.6) 0;
   }
 }
+
+/* ─── Retro Toastify Overrides ─── */
+.Toastify__toast-theme--light, 
+.Toastify__toast-theme--dark, 
+.Toastify__toast-theme--colored {
+  background-color: #000 !important;
+  color: #fff !important;
+  border: 2px solid #fff !important;
+  border-radius: 0 !important; /* Blocky retro look */
+  font-family: inherit !important; /* Inherit the bitcount font */
+  box-shadow: 4px 4px 0px 0px rgba(255,255,255,1) !important;
+}
+
+.Toastify__progress-bar {
+  background: repeating-linear-gradient(
+    45deg,
+    #fff,
+    #fff 10px,
+    #000 10px,
+    #000 20px
+  ) !important;
+}
+
+.Toastify__close-button {
+  color: #fff !important;
+  opacity: 1 !important;
+}
+
+.Toastify__toast-icon svg {
+  fill: #fff !important;
+}

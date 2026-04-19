@@ -18,7 +18,7 @@ function Liked() {
 
   useEffect(() => {
     axios
-      .get("http://localhost:5001/auth/liked", { withCredentials: true })
+      .get(`${import.meta.env.VITE_BACKEND_URL}/auth/liked`, { withCredentials: true })
       .then((res) => {
         setVideos(res.data);
         setLoading(false);

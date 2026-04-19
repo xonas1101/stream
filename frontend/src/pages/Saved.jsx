@@ -18,7 +18,7 @@ function Saved() {
 
   useEffect(() => {
     axios
-      .get("http://localhost:5001/auth/saved", { withCredentials: true })
+      .get(`${import.meta.env.VITE_BACKEND_URL}/auth/saved`, { withCredentials: true })
       .then((res) => {
         setVideos(res.data);
         setLoading(false);

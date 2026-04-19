@@ -17,7 +17,7 @@ function CreateRoomButton() {
 
     if (!socket) return;
 
-    fetch("http://localhost:5001/api/me", {
+    fetch(`${import.meta.env.VITE_BACKEND_URL}/api/me`, {
       credentials: "include",
     })
       .then((res) => {

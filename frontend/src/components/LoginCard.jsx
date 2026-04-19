@@ -9,7 +9,7 @@ function LoginCard({ fadeOut }) {
   const handleLogin = () => {
     const returnTo = sessionStorage.getItem("returnTo");
     const query = returnTo ? `?returnTo=${encodeURIComponent(returnTo)}` : "";
-    window.location.href = `http://localhost:5001/auth/google${query}`;
+    window.location.href = `${import.meta.env.VITE_BACKEND_URL}/auth/google${query}`;
   };
 
   return (

@@ -113,7 +113,7 @@ function Video() {
 
   useEffect(() => {
     axios
-      .get(`http://localhost:5001/auth/video/${videoId}`, {
+      .get(`${import.meta.env.VITE_BACKEND_URL}/auth/video/${videoId}`, {
         withCredentials: true,
       })
       .then((res) => setVideo(res.data))

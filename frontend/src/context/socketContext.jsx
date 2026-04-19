@@ -10,7 +10,7 @@ export function SocketProvider({ children }) {
 
   useEffect(() => {
     // Create socket but don't auto-connect yet
-    const newSocket = io("http://localhost:5001", {
+    const newSocket = io(`${import.meta.env.VITE_BACKEND_URL}`, {
       withCredentials: true,
       autoConnect: false, // prevents connection until manually triggered
     });
@@ -25,7 +25,7 @@ export function SocketProvider({ children }) {
 
   useEffect(() => {
     if (socket) {
-      fetch("http://localhost:5001/api/me", {
+      fetch(`${import.meta.env.VITE_BACKEND_URL}/api/me`, {
         credentials: "include",
       })
         .then((res) => {

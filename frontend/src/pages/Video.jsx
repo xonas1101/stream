@@ -18,9 +18,10 @@ function Video() {
   const roomId = state?.roomId ?? new URLSearchParams(search).get("roomId");
 
   const playerRef = useRef(null);
-  const isRemoteAction = useRef(false);
-  const lastAction = useRef(null); // prevent duplicate emits
+  const ignoreNextStateChange = useRef(false);
+  const expectedState = useRef(null);
   const toastTimeout = useRef(null); // prevent spam toasts
+  const pendingInitialSync = useRef(null); // hold state if player not ready
 
   const [messages, setMessages] = useState([]);
   const messageEndRef = useRef(null);
@@ -92,34 +93,57 @@ function Video() {
     if (!socket) return;
 
     const handleVideoControl = async ({ action, currentTime, name }) => {
-      if (!playerRef.current) return;
+      if (!playerRef.current) {
+        pendingInitialSync.current = { action, currentTime, name };
+        return;
+      }
       try {
-        isRemoteAction.current = true;
+        const currentState = await playerRef.current.getPlayerState();
+        const localTime = await playerRef.current.getCurrentTime();
 
+        let needsSeek = false;
         if (typeof currentTime === "number" && !isNaN(currentTime)) {
+          const threshold = action === "pause" ? 0.5 : 2;
+          if (Math.abs(localTime - currentTime) > threshold) {
+            needsSeek = true;
+          }
+        }
+
+        let willChangeState = false;
+        if (action === "play" && currentState !== 1) willChangeState = true;
+        if (action === "pause" && currentState !== 2) willChangeState = true;
+        if (needsSeek) willChangeState = true;
+
+        if (willChangeState) {
+          ignoreNextStateChange.current = true;
+          expectedState.current = action === "play" ? 1 : 2;
+        }
+
+        if (needsSeek) {
           await playerRef.current.seekTo(currentTime, true);
         }
+
         if (action === "play") await playerRef.current.playVideo();
         else if (action === "pause") await playerRef.current.pauseVideo();
 
         // avoid spamming toast
         if (toastTimeout.current) clearTimeout(toastTimeout.current);
         toastTimeout.current = setTimeout(() => {
-          toast.info(
-            `${name} ${action === "pause" ? "paused" : "played"} the video`,
-            {
-              className:
-                "bg-black text-white font-bitcount rounded-lg shadow-lg",
-              progressClassName: "bg-dotted-progress rounded-none",
-              autoClose: 1500,
-              position: "top-right",
-            }
-          );
+          if (name) { // name might not exist on initial sync
+            toast.info(
+              `${name} ${action === "pause" ? "paused" : "played"} the video`,
+              {
+                className:
+                  "bg-black text-white font-bitcount rounded-lg shadow-lg",
+                progressClassName: "bg-dotted-progress rounded-none",
+                autoClose: 1500,
+                position: "top-right",
+              }
+            );
+          }
         }, 200);
       } catch (err) {
         console.error("Error syncing video:", err);
-      } finally {
-        setTimeout(() => (isRemoteAction.current = false), 200);
       }
     };
 
@@ -127,26 +151,54 @@ function Video() {
     return () => socket.off("video-control", handleVideoControl);
   }, [socket]);
 
-  const onPlayerReady = (event) => {
+  const onPlayerReady = async (event) => {
     playerRef.current = event.target;
+    if (pendingInitialSync.current) {
+      const { action, currentTime } = pendingInitialSync.current;
+      pendingInitialSync.current = null;
+
+      try {
+        // We do NOT set ignoreNextStateChange here. 
+        // If autoplay succeeds, it will emit 'play' at currentTime (which causes no stutter for others).
+        // If autoplay fails (browser blocked), the user must click play manually.
+        // When they do, it will emit 'play' and bring everyone into sync.
+
+        if (typeof currentTime === "number" && !isNaN(currentTime)) {
+          await playerRef.current.seekTo(currentTime, true);
+        }
+        if (action === "play") await playerRef.current.playVideo();
+        else if (action === "pause") await playerRef.current.pauseVideo();
+      } catch (err) {
+        console.error("Initial sync error:", err);
+      }
+    }
   };
 
   // Instead of onPlay/onPause → use onStateChange
   const onPlayerStateChange = async (event) => {
-    if (isRemoteAction.current) return;
-
     const time = await event.target.getCurrentTime();
-    const ytState = event.data; // 1 = playing, 2 = paused
+    const ytState = event.data; // 1 = playing, 2 = paused, 3 = buffering
 
-    if (ytState === 1 && lastAction.current !== "play") {
-      lastAction.current = "play";
+    if (ignoreNextStateChange.current) {
+        if (ytState === expectedState.current) {
+            ignoreNextStateChange.current = false;
+            return; 
+        } else if (ytState === 3 || ytState === -1) {
+            // buffering or unstarted are intermediate, keep waiting
+            return;
+        } else {
+            // User manually forced a contrary state (e.g. clicked play while we were expecting pause)
+            ignoreNextStateChange.current = false;
+        }
+    }
+
+    if (ytState === 1) {
       socket.emit("video-control", {
         roomId,
         action: "play",
         currentTime: time,
       });
-    } else if (ytState === 2 && lastAction.current !== "pause") {
-      lastAction.current = "pause";
+    } else if (ytState === 2) {
       socket.emit("video-control", {
         roomId,
         action: "pause",

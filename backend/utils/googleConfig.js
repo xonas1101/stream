@@ -8,5 +8,5 @@ const GOOGLE_CLIENT_SECRET = process.env.OAUTH_CLIENT_SECRET;
 export const oauth2Client = new google.auth.OAuth2(
   GOOGLE_CLIENT_ID,
   GOOGLE_CLIENT_SECRET,
-  "http://localhost:5173/auth/callback"
+  `${process.env.BACKEND_URL || "http://localhost:5001"}/auth/callback`
 );

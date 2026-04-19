@@ -113,6 +113,15 @@ io.on("connection", (socket) => {
       name: session.user.name,
     });
   });
+
+  socket.on("send-reaction", ({ roomId, emoji }) => {
+    // Broadcast to everyone in the room (including sender)
+    io.to(roomId).emit("receive-reaction", {
+      emoji,
+      senderId: socket.id,
+      name: session.user.name,
+    });
+  });
 });
 
 const PORT = 5000;

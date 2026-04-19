@@ -2,6 +2,8 @@ import { useLocation, useParams, useNavigate } from "react-router-dom";
 import { useState, useEffect, useRef } from "react";
 import { useSocket } from "../context/socketContext";
 import ChatInput from "../components/ChatInput";
+import ReactionBar from "../components/ReactionBar";
+import ReactionBubbles from "../components/ReactionBubbles";
 import { toast } from "react-toastify";
 
 function RoomPage() {
@@ -107,8 +109,9 @@ function RoomPage() {
         </div>
       </div>
 
-      {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-4">
+      {/* Messages + Reaction Bubbles */}
+      <div className="flex-1 overflow-y-auto p-4 relative">
+        <ReactionBubbles roomId={roomId} />
         {messages.map((msg, i) => {
           const isMine = socket?.id === msg.senderId;
           console.log("Rendering message:", {
@@ -160,6 +163,7 @@ function RoomPage() {
         <div ref={messageEndRef} />
       </div>
 
+      <ReactionBar roomId={roomId} />
       <ChatInput sendMessages={sendMessages} />
     </div>
   );

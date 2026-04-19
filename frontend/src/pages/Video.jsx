@@ -6,6 +6,8 @@ import { useSocket } from "../context/socketContext";
 import { toast } from "react-toastify";
 import YouTube from "react-youtube";
 import ChatInput from "../components/ChatInput";
+import ReactionBar from "../components/ReactionBar";
+import ReactionBubbles from "../components/ReactionBubbles";
 
 function Video() {
   const { id: videoId } = useParams();
@@ -178,7 +180,8 @@ function Video() {
         {/* Chat box column */}
         <div className="mt-12 flex flex-col w-[30vw] h-[33.75vw] border-4 border-white rounded-2xl overflow-hidden">
           {/* Messages */}
-          <div className="flex-1 overflow-y-auto p-4">
+          <div className="flex-1 overflow-y-auto p-4 relative">
+            <ReactionBubbles roomId={roomId} />
             {messages.map((msg, i) => {
               const isMine = socket?.id === msg.senderId;
               return (
@@ -226,7 +229,8 @@ function Video() {
             <div ref={messageEndRef} />
           </div>
 
-          {/* Input */}
+          {/* Reaction Bar + Input */}
+          <ReactionBar roomId={roomId} />
           <ChatInput sendMessages={sendMessages} />
         </div>
       </div>

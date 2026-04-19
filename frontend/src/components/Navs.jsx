@@ -4,37 +4,29 @@ import User from "./User";
 
 function Navs() {
   const { state } = useLocation();
-  const [roomId, setRoomId] = useState(() => {
-    return localStorage.getItem("roomId");
-  });
-
-  useEffect(() => {
-    if (state?.roomId) {
-      setRoomId(state.roomId);
-      localStorage.setItem("roomId", state.roomId);
-    }
-  }, [state]);
+  const roomId = state?.roomId || localStorage.getItem("roomId");
 
   return (
     <div className="flex items-center gap-4 text-white font-bitcount text-2xl">
-      <NavLink to="/home" className="hover:underline decoration-dotted">
+      <NavLink to="/home" state={{ roomId }} className="hover:underline decoration-dotted">
         Home
       </NavLink>
 
-      <NavLink to="/trending" className="hover:underline decoration-dotted">
+      <NavLink to="/trending" state={{ roomId }} className="hover:underline decoration-dotted">
         Watch
       </NavLink>
 
       {roomId && (
         <NavLink
           to={`/room/${roomId}`}
+          state={{ roomId }}
           className="hover:underline decoration-dotted"
         >
           Room
         </NavLink>
       )}
 
-      <NavLink to="/about" className="hover:underline decoration-dotted">
+      <NavLink to="/about" state={{ roomId }} className="hover:underline decoration-dotted">
         About
       </NavLink>
 

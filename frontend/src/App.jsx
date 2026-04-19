@@ -1,4 +1,7 @@
-import { Route, Routes } from "react-router-dom";
+import { Route, Routes, useLocation } from "react-router-dom";
+import { useEffect } from "react";
+import { useSocket } from "./context/socketContext.jsx";
+import { toast } from "react-toastify";
 import Home from "./pages/Home";
 import Layout from "./Layouts/Layout";
 import Landing from "./pages/Landing";
@@ -17,10 +20,36 @@ import ProtectedRoute from "./components/ProtectedRoutes.jsx";
 import { WebRTCProvider } from "./context/WebRTCContext.jsx";
 // import AuthCallback from "./pages/AuthCallback.jsx";
 
+function GlobalChatListener() {
+  const socket = useSocket();
+  const location = useLocation();
+
+  useEffect(() => {
+    if (!socket) return;
+
+    const handleMessage = (msg) => {
+      // Show notification only if not on room or video page
+      const isOnChatPage = location.pathname.startsWith("/room/") || location.pathname.startsWith("/video/");
+      
+      if (!isOnChatPage) {
+        toast.info(`💬 ${msg.name}: ${msg.text}`, {
+          autoClose: 3000,
+        });
+      }
+    };
+
+    socket.on("receive-message", handleMessage);
+    return () => socket.off("receive-message", handleMessage);
+  }, [socket, location.pathname]);
+
+  return null;
+}
+
 function App() {
   return (
     <div className="min-h-screen min-w-screen text-white font-bitcount">
       <WebRTCProvider>
+        <GlobalChatListener />
         <MarioFollower />
         <Routes>
           <Route path="/" element={<Landing />} />

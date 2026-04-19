@@ -6,20 +6,20 @@ export default function ReactionBubbles({ roomId }) {
   const [bubbles, setBubbles] = useState([]);
   const idCounter = useRef(0);
 
-  const addBubble = useCallback((emoji) => {
+  const addBubble = useCallback(({ emoji, pfp, name }) => {
     const id = idCounter.current++;
-    // Random horizontal position between 5% and 95%
-    const left = Math.random() * 90 + 5;
+    // Random horizontal position between 5% and 90%
+    const left = Math.random() * 85 + 5;
     // Slight random delay for organic feel
     const delay = Math.random() * 0.15;
     // Random size variation
-    const scale = 0.8 + Math.random() * 0.6;
+    const scale = 0.85 + Math.random() * 0.4;
     // Random drift direction
-    const drift = (Math.random() - 0.5) * 60;
+    const drift = (Math.random() - 0.5) * 50;
 
-    setBubbles((prev) => [...prev, { id, emoji, left, delay, scale, drift }]);
+    setBubbles((prev) => [...prev, { id, emoji, pfp, name, left, delay, scale, drift }]);
 
-    // Remove bubble after animation completes (4s animation + delay)
+    // Remove bubble after animation completes (4s + delay)
     setTimeout(() => {
       setBubbles((prev) => prev.filter((b) => b.id !== id));
     }, 4500 + delay * 1000);
@@ -28,8 +28,8 @@ export default function ReactionBubbles({ roomId }) {
   useEffect(() => {
     if (!socket || !roomId) return;
 
-    const handleReaction = ({ emoji }) => {
-      addBubble(emoji);
+    const handleReaction = ({ emoji, pfp, name }) => {
+      addBubble({ emoji, pfp, name });
     };
 
     socket.on("receive-reaction", handleReaction);
@@ -39,7 +39,7 @@ export default function ReactionBubbles({ roomId }) {
   return (
     <div className="reaction-bubbles-container" aria-hidden="true">
       {bubbles.map((bubble) => (
-        <span
+        <div
           key={bubble.id}
           className="reaction-bubble"
           style={{
@@ -49,8 +49,19 @@ export default function ReactionBubbles({ roomId }) {
             "--bubble-drift": `${bubble.drift}px`,
           }}
         >
-          {bubble.emoji}
-        </span>
+          {/* Avatar */}
+          {bubble.pfp && (
+            <img
+              src={bubble.pfp}
+              alt={bubble.name}
+              title={bubble.name}
+              className="reaction-avatar"
+              referrerPolicy="no-referrer"
+            />
+          )}
+          {/* Emoji badge */}
+          <span className="reaction-emoji-badge">{bubble.emoji}</span>
+        </div>
       ))}
     </div>
   );

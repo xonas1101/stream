@@ -61,12 +61,33 @@
 .reaction-bubble {
   position: absolute;
   bottom: 0;
-  font-size: calc(2rem * var(--bubble-scale, 1));
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   animation:
     reactionFloat 4s ease-out forwards,
     reactionWobble 2s ease-in-out infinite;
   will-change: transform, opacity;
-  filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.3));
+  filter: drop-shadow(0 3px 10px rgba(0, 0, 0, 0.4));
+  transform-origin: bottom center;
+}
+
+.reaction-avatar {
+  width: calc(2.4rem * var(--bubble-scale, 1));
+  height: calc(2.4rem * var(--bubble-scale, 1));
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.7);
+  object-fit: cover;
+  position: relative;
+}
+
+.reaction-emoji-badge {
+  position: absolute;
+  top: -0.6rem;
+  right: -0.6rem;
+  font-size: calc(1.2rem * var(--bubble-scale, 1));
+  line-height: 1;
+  filter: drop-shadow(0 1px 3px rgba(0,0,0,0.5));
 }
 
 @keyframes reactionFloat {

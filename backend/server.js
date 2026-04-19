@@ -120,6 +120,7 @@ io.on("connection", (socket) => {
       emoji,
       senderId: socket.id,
       name: session.user.name,
+      pfp: session.user.picture,
     });
   });
 });

@@ -26,6 +26,35 @@ function Video() {
   const messageEndRef = useRef(null);
   const navigate = useNavigate();
 
+  // ── Resizable sidebar ──────────────────────────────────────────
+  const [sidebarWidth, setSidebarWidth] = useState(320);
+  const isDragging = useRef(false);
+
+  const startResize = (e) => {
+    e.preventDefault();
+    isDragging.current = true;
+    document.body.style.cursor = "col-resize";
+    document.body.style.userSelect = "none";
+
+    const onMove = (moveEvent) => {
+      if (!isDragging.current) return;
+      const clientX = moveEvent.clientX ?? moveEvent.touches?.[0]?.clientX;
+      const newWidth = window.innerWidth - clientX;
+      setSidebarWidth(Math.min(600, Math.max(240, newWidth)));
+    };
+
+    const onUp = () => {
+      isDragging.current = false;
+      document.body.style.cursor = "";
+      document.body.style.userSelect = "";
+      document.removeEventListener("pointermove", onMove);
+      document.removeEventListener("pointerup", onUp);
+    };
+
+    document.addEventListener("pointermove", onMove);
+    document.addEventListener("pointerup", onUp);
+  };
+
   useEffect(() => {
     if (!socket || !roomId) return;
     socket.emit("join-room", { roomId });
@@ -186,8 +215,24 @@ function Video() {
           </div>
         </div>
 
-        {/* ── Chat sidebar ── fixed width, full remaining height */}
-        <div className="flex flex-col w-80 lg:w-96 xl:w-[28rem] flex-shrink-0 border-l-4 border-white h-full">
+        {/* ── Resize handle ── */}
+        <div
+          onPointerDown={startResize}
+          className="group flex-shrink-0 w-2 cursor-col-resize flex items-center justify-center hover:bg-white/10 transition-colors active:bg-white/20"
+          title="Drag to resize chat"
+        >
+          <div className="flex flex-col gap-[3px] opacity-30 group-hover:opacity-80 transition-opacity">
+            <span className="w-1 h-1 rounded-full bg-white" />
+            <span className="w-1 h-1 rounded-full bg-white" />
+            <span className="w-1 h-1 rounded-full bg-white" />
+          </div>
+        </div>
+
+        {/* ── Chat sidebar ── resizable */}
+        <div
+          className="flex flex-col flex-shrink-0 border-l-4 border-white h-full"
+          style={{ width: sidebarWidth }}
+        >
 
           {/* Messages */}
           <div className="flex-1 overflow-y-auto p-4 relative">

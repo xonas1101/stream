@@ -25,15 +25,33 @@ function Video() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (!socket || !roomId) return;
-    socket.emit("join-room", { roomId });
+    if (!socket || !roomId) {
+      console.log("No socket or roomId in Video", { socket: !!socket, roomId });
+      return;
+    }
+    
+    const handleJoin = () => {
+      console.log("Video Page: Emitting join-room for roomId:", roomId);
+      socket.emit("join-room", { roomId });
+    };
 
-    socket.on("room-messages", (msgs) => setMessages(msgs || []));
+    socket.on("connect", handleJoin);
+    if (socket.connected) {
+      handleJoin();
+    }
+
+    socket.on("room-messages", (msgs) => {
+      console.log("Video page received room-messages:", msgs);
+      setMessages(msgs || []);
+    });
+    
     socket.on("receive-message", (msg) => {
+      console.log("Video page received message:", msg);
       setMessages((prev) => [...prev, msg]);
     });
 
     return () => {
+      socket.off("connect", handleJoin);
       socket.off("room-messages");
       socket.off("receive-message");
     };
@@ -45,12 +63,13 @@ function Video() {
 
   const sendMessages = (text) => {
     if (!text.trim()) return;
+    console.log("Sending message in Video:", text, "to room:", roomId);
     socket.emit("send-message", { roomId, text });
   };
 
   useEffect(() => {
     axios
-      .get(`http://localhost:5000/auth/video/${videoId}`, {
+      .get(`http://localhost:5001/auth/video/${videoId}`, {
         withCredentials: true,
       })
       .then((res) => setVideo(res.data))

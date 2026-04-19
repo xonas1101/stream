@@ -18,7 +18,7 @@ function Saved() {
 
   useEffect(() => {
     axios
-      .get("http://localhost:5000/auth/saved", { withCredentials: true })
+      .get("http://localhost:5001/auth/saved", { withCredentials: true })
       .then((res) => {
         setVideos(res.data);
         setLoading(false);

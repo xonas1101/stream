@@ -8,7 +8,7 @@ dotenv.config({ path: "config.env" });
 const oauth2Client = new google.auth.OAuth2(
   process.env.OAUTH_CLIENT_ID,
   process.env.OAUTH_CLIENT_SECRET,
-  "http://localhost:5000/auth/callback"
+  "http://localhost:5001/auth/callback"
 );
 
 const scopes = [
@@ -19,13 +19,18 @@ const scopes = [
 ];
 
 export const googleLogin = (req, res) => {
+  const { returnTo } = req.query;
   const state = crypto.randomBytes(32).toString("hex");
+  
   req.session.state = state;
+  if (returnTo) {
+    req.session.returnTo = returnTo;
+  }
 
   const oauth2Client = new google.auth.OAuth2(
     process.env.OAUTH_CLIENT_ID,
     process.env.OAUTH_CLIENT_SECRET,
-    "http://localhost:5000/auth/callback"
+    "http://localhost:5001/auth/callback"
   );
 
   const authorizationUrl = oauth2Client.generateAuthUrl({
@@ -37,7 +42,10 @@ export const googleLogin = (req, res) => {
   });
 
   console.log("🔐 Redirecting to Google OAuth:", authorizationUrl);
-  res.redirect(authorizationUrl);
+  req.session.save((err) => {
+    if (err) console.error("Error saving session in googleLogin:", err);
+    res.redirect(authorizationUrl);
+  });
 };
 
 export const googleCallback = async (req, res) => {
@@ -61,7 +69,7 @@ export const googleCallback = async (req, res) => {
   const oauth2Client = new google.auth.OAuth2(
     process.env.OAUTH_CLIENT_ID,
     process.env.OAUTH_CLIENT_SECRET,
-    "http://localhost:5000/auth/callback"
+    "http://localhost:5001/auth/callback"
   );
 
   try {
@@ -86,7 +94,15 @@ export const googleCallback = async (req, res) => {
     };
 
     console.log("✅ User session set successfully");
-    res.redirect("http://localhost:5173/home");
+    const redirectUrl = req.session.returnTo
+      ? `http://localhost:5173${req.session.returnTo}`
+      : "http://localhost:5173/home";
+    delete req.session.returnTo;
+    
+    req.session.save((err) => {
+      if (err) console.error("Error saving session:", err);
+      res.redirect(redirectUrl);
+    });
   } catch (err) {
     console.error("❌ Full error during callback:", {
       message: err.message,

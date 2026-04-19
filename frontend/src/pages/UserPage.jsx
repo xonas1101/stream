@@ -5,7 +5,7 @@ function UserPage() {
   const [user, setUser] = useState(null);
   useEffect(() => {
     axios
-      .get("http://localhost:5000/auth/me", { withCredentials: true })
+      .get("http://localhost:5001/auth/me", { withCredentials: true })
       .then((res) => {
         console.log("User:", res.data);
         setUser(res.data);

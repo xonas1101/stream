@@ -18,7 +18,7 @@ function Trending() {
 
   useEffect(() => {
     axios
-      .get("http://localhost:5000/auth/trending", { withCredentials: true })
+      .get("http://localhost:5001/auth/trending", { withCredentials: true })
       .then((res) => {
         setVideos(res.data);
         setLoading(false);

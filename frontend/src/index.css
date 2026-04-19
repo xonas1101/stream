@@ -1,3 +1,128 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* ─── Reaction Bar ─── */
+.reaction-bar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 6px 10px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 9999px;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  width: fit-content;
+  margin: 0 auto 6px;
+}
+
+.reaction-btn {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  transition: transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1),
+    background 0.2s ease;
+}
+
+.reaction-btn:hover {
+  background: rgba(255, 255, 255, 0.12);
+  transform: scale(1.25);
+}
+
+.reaction-btn:active {
+  transform: scale(0.85);
+}
+
+.reaction-emoji {
+  font-size: 1.45rem;
+  line-height: 1;
+  pointer-events: none;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.3));
+}
+
+/* ─── Floating Reaction Bubbles ─── */
+.reaction-bubbles-container {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 50;
+}
+
+.reaction-bubble {
+  position: absolute;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  animation:
+    reactionFloat 4s ease-out forwards,
+    reactionWobble 2s ease-in-out infinite;
+  will-change: transform, opacity;
+  filter: drop-shadow(0 3px 10px rgba(0, 0, 0, 0.4));
+  transform-origin: bottom center;
+}
+
+.reaction-avatar {
+  width: calc(2.4rem * var(--bubble-scale, 1));
+  height: calc(2.4rem * var(--bubble-scale, 1));
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.7);
+  object-fit: cover;
+  position: relative;
+}
+
+.reaction-emoji-badge {
+  position: absolute;
+  top: -0.6rem;
+  right: -0.6rem;
+  font-size: calc(1.2rem * var(--bubble-scale, 1));
+  line-height: 1;
+  filter: drop-shadow(0 1px 3px rgba(0,0,0,0.5));
+}
+
+@keyframes reactionFloat {
+  0% {
+    transform: translateY(0) scale(0.2);
+    opacity: 0;
+  }
+  8% {
+    transform: translateY(-3%) scale(1.15);
+    opacity: 1;
+  }
+  15% {
+    transform: translateY(-8%) scale(1);
+    opacity: 1;
+  }
+  70% {
+    opacity: 0.85;
+  }
+  100% {
+    transform: translateY(-95vh) scale(0.7);
+    opacity: 0;
+  }
+}
+
+@keyframes reactionWobble {
+  0%, 100% {
+    translate: 0 0;
+  }
+  25% {
+    translate: calc(var(--bubble-drift, 0px) * 0.4) 0;
+  }
+  50% {
+    translate: calc(var(--bubble-drift, 0px) * -0.2) 0;
+  }
+  75% {
+    translate: calc(var(--bubble-drift, 0px) * 0.6) 0;
+  }
+}

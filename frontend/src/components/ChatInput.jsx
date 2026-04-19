@@ -24,6 +24,7 @@ export default function ChatInput({ sendMessages }) {
     if (e.key === "Enter") {
       if (e.shiftKey) {
         e.preventDefault();
+        e.stopPropagation();
         const cursorPos = e.target.selectionStart;
         const textBefore = input.substring(0, cursorPos);
         const textAfter = input.substring(cursorPos);
@@ -33,6 +34,7 @@ export default function ChatInput({ sendMessages }) {
         }, 0);
       } else {
         e.preventDefault();
+        e.stopPropagation();
         handleSend(input);
       }
     }
@@ -43,14 +45,14 @@ export default function ChatInput({ sendMessages }) {
   };
 
   return (
-    <div className="flex mx-8 my-4 p-4 bg-stone-800 items-end relative">
+    <div className="flex mx-2 my-2 px-3 py-2 bg-stone-800 items-center relative">
       {/* Emoji Button */}
       <button
         type="button"
         onClick={() => setShowEmojiPicker((prev) => !prev)}
-        className="mr-2 px-3 py-2 bg-black text-white border border-transparent hover:border-white flex-shrink-0"
+        className="mr-1 p-1.5 h-10 bg-black text-white border border-transparent hover:border-white flex-shrink-0 leading-none"
       >
-        <div className="text-2xl">😀</div>
+        <span className="text-base leading-none">😀</span>
       </button>
 
       {/* Textarea */}
@@ -64,15 +66,15 @@ export default function ChatInput({ sendMessages }) {
         }}
         onKeyDown={(e) => handleKeyPress(e)}
         rows={1}
-        style={{ overflow: "hidden" }}
-        className="flex-1 resize-none px-4 text-xl py-3 h-12 focus:border text-white bg-black outline-none"
+        style={{ overflow: "hidden", height: "40px" }}
+        className="flex-1 min-w-0 resize-none px-2 text-base py-2 focus:border text-white bg-black outline-none"
         placeholder="Type a message..."
       />
 
       {/* Send Button */}
       <button
         onClick={() => handleSend(input)}
-        className="ml-2 px-4 py-2 h-12 bg-black text-white border border-transparent hover:border-white text-xl flex-shrink-0 outline-none"
+        className="ml-1 px-3 py-1 h-10 bg-black text-white border border-transparent hover:border-white text-base flex-shrink-0 outline-none"
       >
         Send
       </button>
@@ -80,7 +82,7 @@ export default function ChatInput({ sendMessages }) {
       {/* Emoji Picker */}
       {showEmojiPicker && (
         <div className="absolute bottom-16 left-0 z-50">
-          <EmojiPicker onEmojiClick={handleEmojiClick} theme="dark" />
+          <EmojiPicker onEmojiClick={handleEmojiClick} theme="dark" width={260} height={320} />
         </div>
       )}
     </div>

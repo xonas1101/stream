@@ -2,6 +2,8 @@ import { useLocation, useParams, useNavigate } from "react-router-dom";
 import { useState, useEffect, useRef } from "react";
 import { useSocket } from "../context/socketContext";
 import ChatInput from "../components/ChatInput";
+import ReactionBar from "../components/ReactionBar";
+import ReactionBubbles from "../components/ReactionBubbles";
 import { toast } from "react-toastify";
 import { useWebRTC } from "../hooks/useWebRTC";
 import { CamGrid } from "../components/CamGrid";
@@ -147,63 +149,68 @@ function RoomPage() {
           />
         </div>
 
-          <div className="flex flex-col flex-1 relative">
-            <div className="flex-1 overflow-y-auto p-4 pb-[80px]">
-              {messages.map((msg, i) => {
-                const isMine = socket?.id === msg.senderId;
-                console.log("Rendering message:", {
-                  text: msg.text,
-                  pfp: msg.pfp,
-                  isMine,
-                  socketId: socket.id,
-                  senderId: msg.senderId,
-                });
+        {/* Messages Layout */}
+        <div className="flex flex-col flex-1 relative">
+          <div className="flex-1 overflow-y-auto p-4 pb-[80px] relative">
+            <ReactionBubbles roomId={roomId} />
+            {messages.map((msg, i) => {
+              const isMine = socket?.id === msg.senderId;
+              console.log("Rendering message:", {
+                text: msg.text,
+                pfp: msg.pfp,
+                isMine,
+                socketId: socket.id,
+                senderId: msg.senderId,
+              });
 
-                return (
+              return (
+                <div
+                  key={i}
+                  className={`flex gap-4 mb-4 mr-4 ${
+                    isMine ? "justify-end" : "justify-start"
+                  }`}
+                >
+                  {!isMine && (
+                    <img
+                      src={msg.pfp}
+                      alt={msg.name}
+                      className="w-10 h-10 rounded-full mr-2"
+                      referrerPolicy="no-referrer"
+                    />
+                  )}
                   <div
-                    key={i}
-                    className={`flex gap-4 mb-4 mr-4 ${
-                      isMine ? "justify-end" : "justify-start"
+                    className={`max-w-xs p-3 rounded-lg ${
+                      isMine ? "bg-stone-800 text-white" : "bg-slate-300 text-black"
                     }`}
                   >
                     {!isMine && (
-                      <img
-                        src={msg.pfp}
-                        alt={msg.name}
-                        className="w-10 h-10 rounded-full mr-2"
-                        referrerPolicy="no-referrer"
-                      />
+                      <div className="font-light text-stone-900">{msg.name}</div>
                     )}
-                    <div
-                      className={`max-w-xs p-3 rounded-lg ${
-                        isMine ? "bg-stone-800 text-white" : "bg-slate-300 text-black"
-                      }`}
-                    >
-                      {!isMine && (
-                        <div className="font-light text-stone-900">{msg.name}</div>
-                      )}
-                      <div className="text-xl break-words whitespace-pre-wrap">
-                        {msg.text}
-                      </div>
+                    <div className="text-xl break-words whitespace-pre-wrap">
+                      {msg.text}
                     </div>
-                    {isMine && (
-                      <img
-                        src={msg.pfp}
-                        alt={msg.name}
-                        className="w-10 h-10 rounded-full ml-2"
-                        referrerPolicy="no-referrer"
-                      />
-                    )}
                   </div>
-                );
-              })}
-              <div ref={messageEndRef} />
-            </div>
+                  {isMine && (
+                    <img
+                      src={msg.pfp}
+                      alt={msg.name}
+                      className="w-10 h-10 rounded-full ml-2"
+                      referrerPolicy="no-referrer"
+                    />
+                  )}
+                </div>
+              );
+            })}
+            <div ref={messageEndRef} />
+          </div>
 
+          <div className="flex flex-col">
+            <ReactionBar roomId={roomId} />
             <ChatInput sendMessages={sendMessages} />
           </div>
         </div>
       </div>
+    </div>
   );
 }
 

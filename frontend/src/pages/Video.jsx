@@ -187,7 +187,7 @@ function Video() {
         </div>
 
         {/* ── Chat sidebar ── fixed width, full remaining height */}
-        <div className="flex flex-col w-72 lg:w-80 xl:w-96 flex-shrink-0 border-l-4 border-white h-full">
+        <div className="flex flex-col w-80 lg:w-96 xl:w-[28rem] flex-shrink-0 border-l-4 border-white h-full">
 
           {/* Messages */}
           <div className="flex-1 overflow-y-auto p-4 relative">

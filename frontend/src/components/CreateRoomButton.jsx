@@ -1,11 +1,20 @@
 import axios from "axios";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useSocket } from "../context/socketContext";
 
 function CreateRoomButton() {
   const navigate = useNavigate();
+  const location = useLocation();
   const socket = useSocket();
+  
+  const existingRoomId = location.state?.roomId || localStorage.getItem("roomId");
+
   const handleClick = () => {
+    if (existingRoomId) {
+      navigate(`/room/${existingRoomId}`, { state: { roomId: existingRoomId } });
+      return;
+    }
+
     if (!socket) return;
 
     fetch("http://localhost:5001/api/me", {

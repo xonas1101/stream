@@ -52,14 +52,29 @@ io.on("connection", (socket) => {
     socket.join(roomId);
     console.log(`${session.user.name} joined the room!`);
 
+    rooms[roomId] = rooms[roomId] || { messages: [], videoId: null, videoState: { action: "pause", currentTime: 0 } };
+
     // Send leader name to the joining user
     socket.emit("room-info", {
       leaderName: roomLeaders[roomId] || null,
     });
 
-    rooms[roomId] = rooms[roomId] || { messages: [] };
-
     socket.emit("room-messages", rooms[roomId].messages);
+
+    // If a video is already selected, let the new user know
+    if (rooms[roomId].videoId) {
+      socket.emit("video-selected", {
+        videoId: rooms[roomId].videoId,
+        leader: roomLeaders[roomId],
+        isInitialSync: true // helps frontend know this is just an initial load
+      });
+      // also send the current playback state so they can sync up
+      socket.emit("video-control", {
+        action: rooms[roomId].videoState.action,
+        currentTime: rooms[roomId].videoState.currentTime,
+        name: roomLeaders[roomId],
+      });
+    }
 
     socket.to(roomId).emit("user-joined", {
       name: session.user.name,
@@ -94,6 +109,11 @@ io.on("connection", (socket) => {
         message: "Not authorized to select video",
       });
     }
+
+    rooms[roomId] = rooms[roomId] || { messages: [], videoId: null, videoState: { action: "pause", currentTime: 0 } };
+    rooms[roomId].videoId = videoId;
+    rooms[roomId].videoState = { action: "pause", currentTime: 0 };
+
     io.to(roomId).emit("video-selected", {
       videoId,
       leader: session.user.name,
@@ -107,6 +127,9 @@ io.on("connection", (socket) => {
   });
 
   socket.on("video-control", ({ roomId, action, currentTime }) => {
+    rooms[roomId] = rooms[roomId] || { messages: [], videoId: null, videoState: { action: "pause", currentTime: 0 } };
+    rooms[roomId].videoState = { action, currentTime };
+
     socket.to(roomId).emit("video-control", {
       action,
       currentTime,

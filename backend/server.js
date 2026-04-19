@@ -4,11 +4,14 @@ import app, { sessionMiddleware } from "./app.js";
 import session from "express-session";
 import crypto from "crypto";
 
+import dotenv from "dotenv";
+dotenv.config();
+
 const server = http.createServer(app);
 
 const io = new Server(server, {
   cors: {
-    origin: "http://localhost:5173",
+    origin: process.env.FRONTEND_URL || "http://localhost:5173",
     methods: ["GET", "POST"],
     credentials: true,
   },
@@ -36,7 +39,8 @@ io.on("connection", (socket) => {
 
   socket.on("create-room", () => {
     const roomId = crypto.randomUUID();
-    const inviteLink = `http://localhost:5173/room/${roomId}`;
+    const frontendUrl = process.env.FRONTEND_URL || "http://localhost:5173";
+    const inviteLink = `${frontendUrl}/room/${roomId}`;
 
     // Save leader for the room
     roomLeaders[roomId] = session.user.name;
@@ -217,7 +221,7 @@ io.on("connection", (socket) => {
   });
 });
 
-const PORT = 5001;
+const PORT = process.env.PORT || 5001;
 server.listen(PORT, () => {
   console.log(`🚀 Server listening on port: ${PORT}`);
 });

@@ -4,18 +4,22 @@ import morgan from "morgan";
 import session from "express-session";
 import sessionFileStore from "session-file-store";
 import authRoutes from "./routes/auth.js";
+import dotenv from "dotenv";
+dotenv.config();
 
 const app = express();
+app.set("trust proxy", 1); // Required for secure cookies behind proxies like Render
 const FileStore = sessionFileStore(session);
 
 // Session middleware (export to reuse in server.js)
 export const sessionMiddleware = session({
   store: new FileStore({ path: "./sessions", retries: 0 }),
-  secret: "your-session-secret", // replace with env variable
+  secret: process.env.SESSION_SECRET || "your-session-secret",
   resave: false,
   saveUninitialized: false,
   cookie: {
-    secure: false, // true if HTTPS
+    secure: process.env.NODE_ENV === "production", // true if deployed
+    sameSite: process.env.NODE_ENV === "production" ? "none" : "lax", // must be 'none' for cross-domain setup
     httpOnly: true,
     maxAge: 1000 * 60 * 60 * 24,
   },
@@ -23,7 +27,7 @@ export const sessionMiddleware = session({
 
 app.use(
   cors({
-    origin: "http://localhost:5173",
+    origin: process.env.FRONTEND_URL || "http://localhost:5173",
     credentials: true,
   })
 );

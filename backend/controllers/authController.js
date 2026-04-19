@@ -5,10 +5,14 @@ import axios from "axios";
 
 dotenv.config({ path: "config.env" });
 
+const getCallbackUrl = () => {
+  return `${process.env.BACKEND_URL || "http://localhost:5001"}/auth/callback`;
+};
+
 const oauth2Client = new google.auth.OAuth2(
   process.env.OAUTH_CLIENT_ID,
   process.env.OAUTH_CLIENT_SECRET,
-  "http://localhost:5001/auth/callback"
+  getCallbackUrl()
 );
 
 const scopes = [
@@ -30,7 +34,7 @@ export const googleLogin = (req, res) => {
   const oauth2Client = new google.auth.OAuth2(
     process.env.OAUTH_CLIENT_ID,
     process.env.OAUTH_CLIENT_SECRET,
-    "http://localhost:5001/auth/callback"
+    getCallbackUrl()
   );
 
   const authorizationUrl = oauth2Client.generateAuthUrl({
@@ -69,7 +73,7 @@ export const googleCallback = async (req, res) => {
   const oauth2Client = new google.auth.OAuth2(
     process.env.OAUTH_CLIENT_ID,
     process.env.OAUTH_CLIENT_SECRET,
-    "http://localhost:5001/auth/callback"
+    getCallbackUrl()
   );
 
   try {
@@ -94,9 +98,10 @@ export const googleCallback = async (req, res) => {
     };
 
     console.log("✅ User session set successfully");
+    const frontendUrl = process.env.FRONTEND_URL || "http://localhost:5173";
     const redirectUrl = req.session.returnTo
-      ? `http://localhost:5173${req.session.returnTo}`
-      : "http://localhost:5173/home";
+      ? `${frontendUrl}${req.session.returnTo}`
+      : `${frontendUrl}/home`;
     delete req.session.returnTo;
     
     req.session.save((err) => {

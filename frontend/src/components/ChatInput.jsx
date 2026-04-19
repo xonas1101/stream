@@ -24,6 +24,7 @@ export default function ChatInput({ sendMessages }) {
     if (e.key === "Enter") {
       if (e.shiftKey) {
         e.preventDefault();
+        e.stopPropagation();
         const cursorPos = e.target.selectionStart;
         const textBefore = input.substring(0, cursorPos);
         const textAfter = input.substring(cursorPos);
@@ -33,6 +34,7 @@ export default function ChatInput({ sendMessages }) {
         }, 0);
       } else {
         e.preventDefault();
+        e.stopPropagation();
         handleSend(input);
       }
     }

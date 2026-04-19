@@ -143,12 +143,18 @@ function Video() {
   }, [socket, roomId, videoId, navigate]);
 
   return (
-    <>
+    <div className="flex flex-col h-screen overflow-hidden">
       <Navbar />
-      <div className="h-screen w-[100%] flex gap-12">
-        <div className="flex flex-col gap-4 mt-12 ml-12">
+
+      {/* Main content row — fills remaining height below navbar */}
+      <div className="flex flex-1 min-h-0 overflow-hidden">
+
+        {/* ── Video column ── takes all space the chat doesn't use */}
+        <div className="flex flex-col flex-1 min-w-0 p-4 md:p-6 gap-4 overflow-y-auto">
+
+          {/* 16 / 9 video player */}
           <div
-            className="w-[60vw] rounded-2xl border-4 border-white overflow-hidden relative"
+            className="w-full rounded-2xl border-4 border-white overflow-hidden relative"
             style={{ aspectRatio: "16 / 9" }}
           >
             <YouTube
@@ -164,21 +170,25 @@ function Video() {
             />
           </div>
 
-          <div className="flex justify-between">
-            <h1 className="text-3xl">{video?.title || "Loading..."}</h1>
-            <div className="text-3xl flex gap-4 mr-4">
-              <p className="flex items-end gap-2 cursor-default" title="likes">
-                <img src="/liked.svg" className="w-10" /> {video?.likes}
+          {/* Title + stats — pinned to the video width, stats never overflow */}
+          <div className="flex justify-between items-start gap-4 w-full">
+            <h1 className="text-2xl lg:text-3xl min-w-0 leading-snug line-clamp-2">
+              {video?.title || "Loading..."}
+            </h1>
+            <div className="flex gap-4 flex-shrink-0 items-center text-xl lg:text-2xl pt-1">
+              <p className="flex items-center gap-2 cursor-default" title="likes">
+                <img src="/liked.svg" className="w-8 lg:w-10" /> {video?.likes}
               </p>
-              <p className="flex items-end gap-2 cursor-default" title="views">
-                <img src="/views.svg" className="w-12" /> {video?.views}
+              <p className="flex items-center gap-2 cursor-default" title="views">
+                <img src="/views.svg" className="w-10 lg:w-12" /> {video?.views}
               </p>
             </div>
           </div>
         </div>
 
-        {/* Chat box column */}
-        <div className="mt-12 flex flex-col w-[30vw] h-[33.75vw] border-4 border-white rounded-2xl overflow-hidden">
+        {/* ── Chat sidebar ── fixed width, full remaining height */}
+        <div className="flex flex-col w-72 lg:w-80 xl:w-96 flex-shrink-0 border-l-4 border-white h-full">
+
           {/* Messages */}
           <div className="flex-1 overflow-y-auto p-4 relative">
             <ReactionBubbles roomId={roomId} />
@@ -195,7 +205,7 @@ function Video() {
                     <img
                       src={msg.pfp}
                       alt={msg.name}
-                      className="w-8 h-8 rounded-full"
+                      className="w-8 h-8 rounded-full flex-shrink-0"
                       referrerPolicy="no-referrer"
                     />
                   )}
@@ -207,7 +217,7 @@ function Video() {
                     }`}
                   >
                     {!isMine && (
-                      <div className="font-light text-xs text-stone-900">
+                      <div className="font-light text-xs text-stone-600 mb-0.5">
                         {msg.name}
                       </div>
                     )}
@@ -219,7 +229,7 @@ function Video() {
                     <img
                       src={msg.pfp}
                       alt={msg.name}
-                      className="w-8 h-8 rounded-full"
+                      className="w-8 h-8 rounded-full flex-shrink-0"
                       referrerPolicy="no-referrer"
                     />
                   )}
@@ -234,8 +244,9 @@ function Video() {
           <ChatInput sendMessages={sendMessages} />
         </div>
       </div>
-    </>
+    </div>
   );
 }
 
 export default Video;
+

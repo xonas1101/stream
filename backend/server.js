@@ -119,12 +119,6 @@ io.on("connection", (socket) => {
       videoId,
     });
 
-    if (roomLeaders[roomId] !== session.user.name) {
-      return socket.emit("error", {
-        message: "Not authorized to select video",
-      });
-    }
-
     rooms[roomId] = rooms[roomId] || { messages: [], videoId: null, videoState: { action: "pause", currentTime: 0 } };
     rooms[roomId].videoId = videoId;
     rooms[roomId].videoState = { action: "pause", currentTime: 0 };

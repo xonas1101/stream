@@ -7,13 +7,10 @@ function CreateRoomButton() {
   const location = useLocation();
   const socket = useSocket();
   
-  const existingRoomId = location.state?.roomId || localStorage.getItem("roomId");
-
   const handleClick = () => {
-    if (existingRoomId) {
-      navigate(`/room/${existingRoomId}`, { state: { roomId: existingRoomId } });
-      return;
-    }
+    // If they click create room, we enforce creating a NEW one, so we clear the old one first to avoid confusion
+    localStorage.removeItem("roomId");
+    localStorage.removeItem("Invite_link");
 
     if (!socket) return;
 
@@ -42,10 +39,12 @@ function CreateRoomButton() {
 
   return (
     <button
-      className="fixed bottom-12 left-12 rounded-full bg-white w-16 p-4"
+      className="fixed bottom-10 left-10 md:left-12 flex items-center justify-center gap-3 bg-stone-100 hover:bg-white text-stone-900 px-6 py-4 rounded-full font-bold shadow-[0_8px_30px_rgb(0,0,0,0.4)] hover:shadow-[0_8px_40px_rgba(255,255,255,0.15)] transition-all duration-300 hover:-translate-y-1 active:scale-95 group z-50 overflow-hidden"
       onClick={handleClick}
     >
-      <img src="./room.svg" />
+      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/50 to-transparent -translate-x-full group-hover:animate-[shimmer_1.5s_infinite]"></div>
+      <img src="/room.svg" className="w-5 h-5 invert relative z-10" alt="Room Icon" />
+      <span className="hidden md:inline relative z-10 group-hover:tracking-wide transition-all">Create Room</span>
     </button>
   );
 }

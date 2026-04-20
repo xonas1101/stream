@@ -123,41 +123,46 @@ function RoomPage() {
   };
 
   return (
-    <div className="flex flex-col gap-4 h-screen">
-      <div className="bg-black flex justify-between items-center w-full p-6 border-b-4 border-white mb-4">
+    <div className="flex flex-col gap-4 h-[calc(100vh-2rem)]">
+      <div className="bg-stone-900 border border-stone-800 rounded-2xl flex justify-between items-center w-full p-4 shadow-xl mb-2">
         <div className="flex gap-4">
           <button 
             onClick={() => navigate("/home", { state: { roomId } })} 
-            className="px-4 py-2 border-2 border-white uppercase tracking-widest hover:bg-white hover:text-black transition-all active:translate-y-1 shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] hover:shadow-[0px_0px_0px_0px_rgba(255,255,255,1)] text-sm md:text-base"
+            className="flex items-center gap-2 px-4 py-2 bg-stone-800 border border-stone-700 rounded-lg hover:bg-stone-700 text-stone-200 transition-all font-semibold active:scale-95 text-sm md:text-base"
           >
-            Home
+            ← Home
           </button>
           <button 
-            onClick={() => navigate("/home")} 
-            className="px-4 py-2 border-2 border-white uppercase tracking-widest hover:bg-red-600 hover:text-white transition-all active:translate-y-1 shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] hover:shadow-[0px_0px_0px_0px_rgba(255,255,255,1)] text-sm md:text-base"
+            onClick={() => {
+              localStorage.removeItem("roomId");
+              localStorage.removeItem("Invite_link");
+              socket.emit("leave-vc", { roomId });
+              navigate("/home");
+            }} 
+            className="flex items-center gap-2 px-4 py-2 bg-red-900/40 border border-red-800/60 rounded-lg hover:bg-red-800/60 text-red-200 transition-all font-semibold active:scale-95 text-sm md:text-base"
           >
             Leave room
           </button>
         </div>
 
-        <span className="text-3xl md:text-5xl uppercase tracking-widest text-center px-4 truncate">
+        <span className="text-xl md:text-2xl font-bold bg-gradient-to-r from-stone-100 to-stone-400 bg-clip-text text-transparent px-4 truncate">
           {name ? `${name}'s Room` : `Unknown's Room`}
         </span>
 
         <div className="flex gap-4">
           <button 
             onClick={copyLink} 
-            className="px-4 py-2 border-2 border-white uppercase tracking-widest hover:bg-white hover:text-black transition-all active:translate-y-1 shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] hover:shadow-[0px_0px_0px_0px_rgba(255,255,255,1)] text-sm md:text-base whitespace-nowrap"
+            className="px-4 py-2 bg-emerald-900/40 border border-emerald-800/60 rounded-lg hover:bg-emerald-800/60 text-emerald-200 transition-all font-semibold active:scale-95 text-sm md:text-base whitespace-nowrap"
           >
-            {copied ? "Copied" : "Copy Link"}
+            {copied ? "Copied!" : "Copy Link"}
           </button>
           {!isVCEnabled && (
             <button 
               onClick={() => startVC(roomId)} 
-              className={`px-4 py-2 border-2 border-white uppercase tracking-widest transition-all active:translate-y-1 shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] hover:shadow-[0px_0px_0px_0px_rgba(255,255,255,1)] text-sm md:text-base whitespace-nowrap ${
+              className={`px-4 py-2 border rounded-lg font-semibold transition-all active:scale-95 text-sm md:text-base whitespace-nowrap ${
                 isVCOngoing 
-                  ? "bg-green-600 text-white hover:bg-green-500 animate-[pulse_2s_ease-in-out_infinite]" 
-                  : "hover:bg-white hover:text-black"
+                  ? "bg-green-600/80 text-white border-green-500 animate-[pulse_2s_ease-in-out_infinite] hover:bg-green-500" 
+                  : "bg-stone-800 border-stone-700 text-stone-200 hover:bg-stone-700"
               }`}
             >
               {isVCOngoing ? "📞 Join Video Chat" : "Start Video Chat"}
@@ -165,14 +170,14 @@ function RoomPage() {
           )}
           <button 
             onClick={handleVideo} 
-            className="px-4 py-2 border-2 border-white bg-white text-black uppercase tracking-widest hover:bg-black hover:text-white transition-all active:translate-y-1 shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] hover:shadow-[0px_0px_0px_0px_rgba(255,255,255,1)] text-sm md:text-base whitespace-nowrap"
+            className="px-4 py-2 bg-stone-100 hover:bg-stone-300 text-stone-900 border border-transparent rounded-lg font-bold transition-all active:scale-95 text-sm md:text-base whitespace-nowrap"
           >
             Select Video
           </button>
         </div>
       </div>
 
-      <div className="flex flex-1 overflow-hidden">
+      <div className="flex flex-1 overflow-hidden bg-stone-900/50 rounded-2xl border border-stone-800 backdrop-blur-sm">
         {/* Videos Container - Only show if VC is enabled */}
         {isVCEnabled && (
           <div className="flex flex-col w-2/3 p-4 border-r border-gray-800">

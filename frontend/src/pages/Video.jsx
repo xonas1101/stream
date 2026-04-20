@@ -287,9 +287,32 @@ function Video() {
 
           {/* Title + stats — pinned to the video width, stats never overflow */}
           <div className="flex justify-between items-start gap-4 w-full">
-            <h1 className="text-2xl lg:text-3xl min-w-0 leading-snug line-clamp-2">
-              {video?.title || "Loading..."}
-            </h1>
+            <div className="flex flex-col gap-2 min-w-0">
+              <h1 className="text-2xl lg:text-3xl min-w-0 leading-snug line-clamp-2">
+                {video?.title || "Loading..."}
+              </h1>
+              {roomId && (
+                <div className="flex gap-3 mt-1">
+                  <button
+                    onClick={() => navigate("/home", { state: { roomId } })}
+                    className="px-3 py-1.5 bg-stone-800 border border-stone-700 rounded-lg hover:bg-stone-700 text-stone-200 transition-all font-semibold active:scale-95 text-sm"
+                  >
+                    Select New Video
+                  </button>
+                  <button
+                    onClick={() => {
+                        localStorage.removeItem("roomId");
+                        localStorage.removeItem("Invite_link");
+                        socket.emit("leave-vc", { roomId });
+                        navigate("/home");
+                    }}
+                    className="px-3 py-1.5 bg-red-900/40 border border-red-800/60 rounded-lg hover:bg-red-800/60 text-red-200 transition-all font-semibold active:scale-95 text-sm"
+                  >
+                    Leave Room
+                  </button>
+                </div>
+              )}
+            </div>
             <div className="flex gap-4 flex-shrink-0 items-center text-xl lg:text-2xl pt-1">
               <p className="flex items-center gap-2 cursor-default" title="likes">
                 <img src="/liked.svg" className="w-8 lg:w-10" /> {video?.likes}

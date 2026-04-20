@@ -67,6 +67,9 @@ export default {
           "30%": { transform: "translate(-40px, 20px) translateY(-20px)" },
           "100%": { transform: "translate(-40px, 20px) translateY(0)" },
         },
+        shimmer: {
+          "100%": { transform: "translateX(100%)" }
+        }
       },
       animation: {
         slideFromTop: "slideFromTop 0.7s ease-out forwards",

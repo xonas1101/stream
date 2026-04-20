@@ -13,22 +13,18 @@ function Search() {
   };
 
   return (
-    <div className="flex gap-2 items-center w-full max-w-xl">
+    <div className="flex gap-2 items-center w-full max-w-xl group relative">
+      <div className="absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none">
+        <img src="/search.svg" alt="Search" className="w-5 h-5 opacity-40 group-focus-within:opacity-100 transition-opacity" />
+      </div>
       <input
         type="text"
-        placeholder="Browse videos..."
+        placeholder="Search for videos..."
         value={query}
         onChange={(e) => setQuery(e.target.value)}
         onKeyDown={(e) => e.key === "Enter" && handleSearch()}
-        className="flex-grow bg-black border-4 border-dotted border-white text-2xl h-12 focus:outline-none focus:ring-0 p-2 text-white placeholder-gray-400 w-full"
+        className="w-full bg-stone-900/80 border border-stone-800 text-stone-100 text-lg h-12 pl-12 pr-4 rounded-full focus:outline-none focus:ring-2 focus:ring-stone-600 focus:bg-stone-800/80 transition-all placeholder-stone-500 shadow-inner"
       />
-      <button
-        onClick={handleSearch}
-        className="border-4 border-white border-dotted p-1 inline-flex justify-center items-center cursor-pointer"
-        aria-label="Search"
-      >
-        <img src="/search.svg" alt="Search icon" className="w-8 h-8" />
-      </button>
     </div>
   );
 }
